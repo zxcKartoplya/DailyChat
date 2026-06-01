@@ -1,56 +1,44 @@
 <script setup lang="ts">
-import type { FormSubmitEvent } from '@nuxt/ui'
-import * as v from 'valibot'
-
-const schema = v.object({
-  email: v.pipe(v.string(), v.email('Invalid email')),
-  password: v.pipe(v.string(), v.minLength(8, 'Must be at least 8 characters'))
-})
-
-type Schema = v.InferOutput<typeof schema>
-
-const state = reactive({
-  email: '',
-  password: ''
-})
+import type { AuthFormField, FormSubmitEvent } from '@nuxt/ui'
+import type { Schema } from '~/utils/shemas/AuthSchema'
+import { authSchema } from '~/utils/shemas/AuthSchema'
 
 const toast = useToast()
-async function onSubmit(event: FormSubmitEvent<Schema>) {
-  toast.add({
-    title: 'Success',
-    description: 'The form has been submitted.',
-    color: 'success'
-  })
-  console.log(event.data)
+const router = useRouter()
+
+const fields: AuthFormField[] = [{
+  name: 'email',
+  type: 'email',
+  label: 'Email',
+  placeholder: 'Введите email',
+  required: true
+}, {
+  name: 'password',
+  label: 'Пароль',
+  type: 'password',
+  placeholder: 'Введите пароль',
+  required: true
+}]
+
+// TODO убрать такую типизацию
+const onSubmit = (payload: FormSubmitEvent<Schema>) => {
+  router.push('/')
+  console.log(payload)
+  toast.add({ title: 'Авторизация', description: 'Вход успешно выполнен!' })
 }
 </script>
 
 <template>
-  <UForm
-    :schema="schema"
-    :state="state"
-    class="space-y-4"
-    @submit="onSubmit"
-  >
-    <UFormField
-      label="Email"
-      name="email"
-    >
-      <UInput v-model="state.email" />
-    </UFormField>
-
-    <UFormField
-      label="Password"
-      name="password"
-    >
-      <UInput
-        v-model="state.password"
-        type="password"
+  <div class="flex flex-col h-screen items-center justify-center gap-4 p-4">
+    <UPageCard class="w-full max-w-md">
+      <UAuthForm
+        :schema="authSchema"
+        title="Login"
+        description="Enter your credentials to access your account."
+        icon="i-lucide-user"
+        :fields="fields"
+        @submit="onSubmit"
       />
-    </UFormField>
-
-    <UButton type="submit">
-      Submit
-    </UButton>
-  </UForm>
+    </UPageCard>
+  </div>
 </template>
