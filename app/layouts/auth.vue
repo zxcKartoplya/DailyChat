@@ -1,4 +1,13 @@
 <script lang="ts" setup>
+const router = useRouter()
+const toast = useToast()
+const { logout } = UseAuth()
+
+const exitAccount = () => {
+  logout()
+  toast.add({ title: 'Авторизация', description: 'Вы успешно вышли из аккаунта!' })
+  router.push('/login')
+}
 </script>
 
 <template>
@@ -18,6 +27,7 @@
         label="Выйти из аккаунта"
         trailing-icon="i-lucide-log-out"
         size="sm"
+        @click="exitAccount"
       />
     </UPageCard>
     <div class="flex-1 h-full overflow-hidden">
