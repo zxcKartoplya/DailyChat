@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+const isShowModal = ref<boolean>(false)
 const messages = ref([
   {
     id: '2',
@@ -7,20 +8,9 @@ const messages = ref([
   }
 ])
 
-const input = ref('')
-
-const onSubmit = () => {
-  if (!input.value.trim()) return
-
-  messages.value.push({
-    id: Date.now().toString(),
-    role: 'user',
-    parts: [{ type: 'text', text: input.value.trim() }]
-  })
-
-  input.value = ''
+const openModal = () => {
+  isShowModal.value = true
 }
-
 definePageMeta({
   layout: 'auth'
 })
@@ -42,8 +32,9 @@ definePageMeta({
       label="Отправить дейлик"
       trailing-icon="mingcute:send-plane-fill"
       size="lg"
-      @click="onSubmit"
+      @click="openModal"
     />
+    <ModalDaily v-model:open="isShowModal" />
   </UPageCard>
 </template>
 
