@@ -2,7 +2,7 @@
 import { StepSendDaily } from '~/types/modalDaily'
 
 const open = defineModel<boolean>('open', { default: false })
-const step = ref<StepSendDaily>(StepSendDaily.ACCEPT_LAST_DAILY)
+const step = ref<StepSendDaily>(StepSendDaily.CREATE_NEW_DAILY)
 </script>
 
 <template>
@@ -12,6 +12,7 @@ const step = ref<StepSendDaily>(StepSendDaily.ACCEPT_LAST_DAILY)
     description="Перед заполнением дейлика отметьте выполненные задачи за вчера."
     direction="bottom"
     :handle="false"
+    :ui="{ container: ' min-h-[500px]' }"
   >
     <template #body>
       <ModalDailyReview v-if="step === StepSendDaily.ACCEPT_LAST_DAILY" />
