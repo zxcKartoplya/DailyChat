@@ -31,7 +31,7 @@ const cancelEdit = () => {
 </script>
 
 <template>
-  <div class="flex flex-col-reverse gap-2">
+  <div class="flex flex-col-reverse gap-2 max-h-125 overflow-y-auto">
     <div
       v-for="task in tasks"
       :key="task.id"

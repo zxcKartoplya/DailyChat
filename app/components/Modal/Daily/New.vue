@@ -5,6 +5,7 @@ type Task = {
 }
 
 const tasks = ref<Task[]>([])
+const mood = ref(10)
 
 const addTask = (text: string) => {
   if (!text.trim()) return
@@ -25,6 +26,9 @@ const updateTask = (id: string, text: string) => {
 
 <template>
   <div class="flex flex-col gap-4">
+    <ModalDailyMoodSlider
+      v-model="mood"
+    />
     <ModalDailyCreateTask @add-task="addTask" />
     <ModalDailyTaskList
       v-if="tasks.length"

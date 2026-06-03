@@ -10,23 +10,36 @@ const emits = defineEmits<{
   next: []
   back: []
 }>()
+
+const showInput = ref(false)
 </script>
 
 <template>
-  <div class="flex gap-3 w-full">
-    <UButton
-      v-if="step !== StepSendDaily.ACCEPT_LAST_DAILY"
-      label="Назад"
-      variant="outline"
-      class="flex-1"
-      @click="emits('back')"
-    />
-    <UButton
-      :label="step === StepSendDaily.ACCEPT_LAST_DAILY ? 'Далее' : 'Отправить'"
-      class="flex-1"
-      :class="{ 'justify-center': step === StepSendDaily.ACCEPT_LAST_DAILY }"
-      @click="emits('next')"
-    />
+  <div class="flex flex-col gap-4 w-full">
+    <div class="flex flex-col gap-2 ">
+      <div class="flex gap-2 items-center">
+        <UCheckbox v-model="showInput" /> Есть блокеры?
+      </div>
+      <UInput
+        v-if="showInput"
+        placeholder="Напишите, что блокирует выполнение задач"
+      />
+    </div>
+    <div class="flex gap-3">
+      <UButton
+        v-if="step !== StepSendDaily.ACCEPT_LAST_DAILY"
+        label="Назад"
+        variant="outline"
+        class="flex-1"
+        @click="emits('back')"
+      />
+      <UButton
+        :label="step === StepSendDaily.ACCEPT_LAST_DAILY ? 'Далее' : 'Отправить'"
+        class="flex-1"
+        :class="{ 'justify-center': step === StepSendDaily.ACCEPT_LAST_DAILY }"
+        @click="emits('next')"
+      />
+    </div>
   </div>
 </template>
 

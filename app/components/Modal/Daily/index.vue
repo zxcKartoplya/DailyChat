@@ -12,7 +12,7 @@ const step = ref<StepSendDaily>(StepSendDaily.CREATE_NEW_DAILY)
     description="Перед заполнением дейлика отметьте выполненные задачи за вчера."
     direction="bottom"
     :handle="false"
-    :ui="{ container: ' min-h-[500px]' }"
+    :ui="{ container: ' min-h-[600px]' }"
   >
     <template #body>
       <ModalDailyReview v-if="step === StepSendDaily.ACCEPT_LAST_DAILY" />
