@@ -1,4 +1,7 @@
 <script lang="ts" setup>
+import { useApi } from '~/composables/api/useApi'
+
+const { useGet } = useApi()
 const isShowModal = ref<boolean>(false)
 const messages = ref([
   {

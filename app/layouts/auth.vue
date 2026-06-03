@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 const router = useRouter()
 const toast = useToast()
-const { logout } = UseAuth()
+const { logout } = useAuth()
 
 const exitAccount = () => {
   logout()

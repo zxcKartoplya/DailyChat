@@ -16,9 +16,18 @@ const showInput = ref(false)
 
 <template>
   <div class="flex flex-col gap-4 w-full">
-    <div class="flex flex-col gap-2 ">
-      <div class="flex gap-2 items-center">
-        <UCheckbox v-model="showInput" /> Есть блокеры?
+    <div
+      v-if="step !== StepSendDaily.ACCEPT_LAST_DAILY"
+      class="flex flex-col gap-2 "
+    >
+      <div
+        class="flex gap-2 items-center"
+        @click="showInput = !showInput"
+      >
+        <UCheckbox
+          v-model="showInput"
+          @click.stop
+        /> Есть блокеры?
       </div>
       <UInput
         v-if="showInput"
