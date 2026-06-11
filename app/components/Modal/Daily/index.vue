@@ -2,7 +2,7 @@
 import { StepSendDaily } from '~/types/modalDaily'
 
 const open = defineModel<boolean>('open', { default: false })
-const step = ref<StepSendDaily>(StepSendDaily.CREATE_NEW_DAILY)
+const step = ref<StepSendDaily>(StepSendDaily.ACCEPT_LAST_DAILY)
 </script>
 
 <template>
