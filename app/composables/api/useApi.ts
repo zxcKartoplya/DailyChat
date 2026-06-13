@@ -1,16 +1,16 @@
 import type { FetchOptions } from 'ofetch'
 
 import type {
-	ApiPaginatedResponse,
-	ApiQueryType,
-	ApiResponse,
-	ApiSimpleResponse
+  ApiPaginatedResponse,
+  ApiQueryType,
+  ApiResponse,
+  ApiSimpleResponse
 } from '~/types/api'
 import { ApiHttpCode } from '~/types/api'
 import type { ActionResponse, Paginated } from '~/types/common'
 import {
-	mapPaginationLinks,
-	mapPaginationMeta
+  mapPaginationLinks,
+  mapPaginationMeta
 } from '~/utils/api/mappers/mapBase'
 import { ApiError } from '~/utils/errors/ApiError'
 import { CommonError } from '~/utils/errors/CommonError'

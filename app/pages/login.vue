@@ -1,10 +1,12 @@
 <script setup lang="ts">
+import { useLoginStore } from '#imports'
 import type { AuthFormField, FormSubmitEvent } from '@nuxt/ui'
 import type { Schema } from '~/utils/shemas/AuthSchema'
 import { authSchema } from '~/utils/shemas/AuthSchema'
 
 const toast = useToast()
-const router = useRouter()
+// const router = useRouter()
+const loginStore = useLoginStore()
 
 const fields: AuthFormField[] = [{
   name: 'email',
@@ -22,8 +24,9 @@ const fields: AuthFormField[] = [{
 
 // TODO убрать такую типизацию
 const onSubmit = (payload: FormSubmitEvent<Schema>) => {
-  router.push('/')
-  console.log(payload)
+  // router.push('/')
+  loginStore.loginUser({ email: payload.data.email, password: payload.data.password })
+  console.log('payload', payload)
   toast.add({ title: 'Авторизация', description: 'Вход успешно выполнен!' })
 }
 </script>
