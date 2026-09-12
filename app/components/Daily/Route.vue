@@ -52,16 +52,28 @@ const startIndex = computed(() => {
   return stations.value[0]?.index ?? todayIndex.value
 })
 
-const endIndex = computed(() => {
-  if (todayStatus) return todayIndex.value
-
-  return stations.value.at(-1)?.index ?? todayIndex.value
-})
+const lastPastIndex = computed(() => stations.value.at(-1)?.index ?? null)
 
 const trackStart = computed(() => (startsBefore.value ? 0 : center(startIndex.value)))
-const trackEnd = computed(() => center(endIndex.value))
+
+const trackEnd = computed(() => {
+  if (lastPastIndex.value !== null) return center(lastPastIndex.value)
+
+  return trackStart.value
+})
 
 const hasTrack = computed(() => trackEnd.value > trackStart.value || startsBefore.value)
+
+const extension = computed(() => {
+  if (!todayStatus) return null
+
+  const from = lastPastIndex.value === null ? trackStart.value : center(lastPastIndex.value)
+  const to = center(todayIndex.value)
+
+  if (to <= from) return null
+
+  return { left: from, width: to - from }
+})
 
 const isClosed = computed(() => {
   return todayStatus === ItemStatus.DONE || todayStatus === ItemStatus.DROPPED
@@ -94,6 +106,12 @@ const stationTitle = (date: string) => formatLongDate(date)
       v-if="hasTrack"
       class="route__track"
       :style="{ left: `${trackStart}%`, width: `${Math.max(trackEnd - trackStart, 0)}%` }"
+    />
+
+    <span
+      v-if="extension"
+      class="route__track route__track--today"
+      :style="{ left: `${extension.left}%`, width: `${extension.width}%` }"
     />
 
     <span
@@ -146,7 +164,21 @@ const stationTitle = (date: string) => formatLongDate(date)
   background: var(--line);
   border-radius: var(--r-pill);
   transform: translateY(-50%);
-  transition: width var(--t-move) var(--ease);
+}
+
+.route__track--today {
+  transform-origin: left center;
+  animation: track-extend var(--t-move) var(--ease);
+}
+
+@keyframes track-extend {
+  from {
+    transform: translateY(-50%) scaleX(0);
+  }
+
+  to {
+    transform: translateY(-50%) scaleX(1);
+  }
 }
 
 .route--closed .route__track {
@@ -255,7 +287,8 @@ const stationTitle = (date: string) => formatLongDate(date)
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .route__today--marked .route__today-mark {
+  .route__today--marked .route__today-mark,
+  .route__track--today {
     animation: none;
   }
 }
