@@ -2,7 +2,9 @@
 const { preference } = useTheme()
 
 useHead({
-  htmlAttrs: computed(() => (preference.value === 'system' ? {} : { 'data-theme': preference.value })),
+  htmlAttrs: {
+    'data-theme': computed(() => (preference.value === 'system' ? undefined : preference.value))
+  },
   titleTemplate: title => (title ? `${title} — Дейлик` : 'Дейлик')
 })
 </script>
