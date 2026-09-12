@@ -88,7 +88,8 @@ onMounted(async () => {
               v-if="submittedTime(entry)"
               class="entry__stamp"
             >
-              отправлен в <span class="num">{{ submittedTime(entry) }}</span>
+              <span>отправлен в</span>
+              <span class="num">{{ submittedTime(entry) }}</span>
             </p>
           </header>
 
@@ -217,6 +218,8 @@ onMounted(async () => {
 }
 
 .entry__stamp {
+  display: flex;
+  gap: var(--s-1);
   font-size: 0.8125rem;
   color: var(--ink-3);
 }

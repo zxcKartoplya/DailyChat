@@ -87,10 +87,16 @@ const stationModifier = (status: ItemStatus) => {
   return 'route__station--stop'
 }
 
-const todayLabel = computed(() => {
-  if (todayStatus) return `Убрать отметку за сегодня по линии «${title}»`
+const lastDayLabel = computed(() => {
+  const last = days.at(-1)
 
-  return `Отметить сегодняшний день по линии «${title}»`
+  return last ? formatLongDate(last) : ''
+})
+
+const todayLabel = computed(() => {
+  if (todayStatus) return `Убрать отметку за ${lastDayLabel.value} по линии «${title}»`
+
+  return `Отметить ${lastDayLabel.value} по линии «${title}»`
 })
 
 const stationTitle = (date: string) => formatLongDate(date)

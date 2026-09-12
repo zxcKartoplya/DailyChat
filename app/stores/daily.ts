@@ -36,8 +36,9 @@ export const useDailyStore = defineStore('daily', () => {
   const isEditable = computed(() => {
     if (!day.value) return false
     if (isToday.value) return true
+    if (date.value < day.value.editableFrom) return false
 
-    return date.value >= day.value.editableFrom && day.value.missingDays.includes(date.value)
+    return submittedAt.value === null
   })
 
   const openChains = computed(() => day.value?.openChains ?? [])

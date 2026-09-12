@@ -146,7 +146,10 @@ onMounted(() => {
           </div>
         </section>
 
-        <section class="daily__section">
+        <section
+          v-if="store.isEditable || store.newItems.length"
+          class="daily__section"
+        >
           <div class="daily__section-head">
             <h2 class="daily__section-title">
               Новая ветка
@@ -158,6 +161,13 @@ onMounted(() => {
             :editable="store.isEditable"
           />
         </section>
+
+        <p
+          v-if="!store.isEditable"
+          class="daily__readonly"
+        >
+          Этот день закрыт на изменения — статусы прошлого не переписываются.
+        </p>
       </template>
 
       <footer class="daily__foot">
@@ -181,7 +191,8 @@ onMounted(() => {
               </button>
             </template>
             <template v-else-if="store.isSubmitted">
-              отправлен в <span class="num">{{ submittedTime }}</span>
+              <span>отправлен в</span>
+              <span class="num">{{ submittedTime }}</span>
             </template>
             <template v-else-if="markedCount">
               {{ markedCount }} {{ plural(markedCount, ['пункт', 'пункта', 'пунктов']) }}
@@ -337,6 +348,12 @@ onMounted(() => {
   margin-top: var(--s-4);
   padding-top: var(--s-4);
   border-top: 1px solid var(--hairline);
+}
+
+.daily__readonly {
+  font-size: 0.875rem;
+  color: var(--ink-3);
+  max-width: 62ch;
 }
 
 .daily__visibility {
