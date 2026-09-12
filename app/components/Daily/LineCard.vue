@@ -48,7 +48,7 @@ watch(() => marked, (value) => {
 
 <template>
   <article
-    class="line panel"
+    class="line"
     :class="{ 'line--marked': marked }"
     :style="{ '--line': color }"
   >
@@ -126,15 +126,21 @@ watch(() => marked, (value) => {
 
 <style scoped>
 .line {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--s-2);
   padding: var(--s-4) var(--s-5) var(--s-3);
-  transition: border-color var(--t-state) var(--ease), background-color var(--t-state) var(--ease);
+  border-bottom: 1px solid var(--hairline);
+  transition: background-color var(--t-state) var(--ease);
+}
+
+.line:last-child {
+  border-bottom: 0;
 }
 
 .line--marked {
-  border-color: color-mix(in srgb, var(--line) 45%, var(--hairline));
+  background: color-mix(in srgb, var(--line) 5%, transparent);
 }
 
 .line__head {

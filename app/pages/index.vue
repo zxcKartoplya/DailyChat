@@ -89,7 +89,7 @@ onMounted(() => {
 
         <button
           type="button"
-          class="btn btn--ghost"
+          class="btn btn--secondary daily__off"
           :class="{ 'daily__off--on': store.isDayOff }"
           :aria-pressed="store.isDayOff"
           :disabled="!store.isEditable"
@@ -129,7 +129,9 @@ onMounted(() => {
             <DailyAxis :days="days" />
           </div>
 
-          <div class="daily__lines">
+          <div class="daily__field panel">
+            <DailyDayGrid :days="days.length" />
+
             <DailyLineCard
               v-for="chain in store.openChains"
               :key="chain.chainId"
@@ -291,9 +293,14 @@ onMounted(() => {
   text-underline-offset: 3px;
 }
 
+.daily__off {
+  align-self: flex-start;
+}
+
 .daily__off--on {
   color: var(--ink);
   background: var(--surface-active);
+  border-color: var(--ink-3);
 }
 
 .daily__off-state {
@@ -333,10 +340,9 @@ onMounted(() => {
   padding: 0 var(--s-5);
 }
 
-.daily__lines {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-3);
+.daily__field {
+  position: relative;
+  overflow: hidden;
 }
 
 .daily__foot {
@@ -384,6 +390,10 @@ onMounted(() => {
 @media (max-width: 48rem) {
   .daily__axis {
     padding: 0 var(--s-4);
+  }
+
+  .daily__head {
+    align-items: flex-start;
   }
 
   .daily__title {

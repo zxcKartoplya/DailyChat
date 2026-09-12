@@ -38,7 +38,7 @@ const firstDay = computed(() => days[0] ?? '')
         :disabled="busy"
         @click="emits('markOff', days)"
       >
-        не работал
+        отметить нерабочими
       </button>
     </div>
   </aside>

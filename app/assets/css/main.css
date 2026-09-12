@@ -16,7 +16,7 @@
   --hairline-strong: #cdc9bd;
   --ink: #23282e;
   --ink-2: #5c6670;
-  --ink-3: #8b949c;
+  --ink-3: #667079;
   --on-ink: #fffdf8;
 
   --line-1: #a86a52;
@@ -50,7 +50,7 @@
   --ctrl-h: 2.75rem;
   --ctrl-h-sm: 2.25rem;
   --nav-w: 14.5rem;
-  --content-max: 56rem;
+  --content-max: 64rem;
   --station-gap: 2.25rem;
 
   --ease: cubic-bezier(0.2, 0.7, 0.3, 1);
@@ -71,7 +71,7 @@
   --hairline-strong: #3d4b73;
   --ink: #eceadf;
   --ink-2: #a9b2c9;
-  --ink-3: #7a86a3;
+  --ink-3: #96a2bd;
   --on-ink: #16203a;
 
   --line-1: #cf8e74;
@@ -103,7 +103,7 @@
     --hairline-strong: #3d4b73;
     --ink: #eceadf;
     --ink-2: #a9b2c9;
-    --ink-3: #7a86a3;
+    --ink-3: #96a2bd;
     --on-ink: #16203a;
 
     --line-1: #cf8e74;

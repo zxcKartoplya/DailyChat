@@ -2,23 +2,23 @@
   <dl class="legend">
     <div class="legend__item">
       <dt class="legend__mark legend__mark--stop" />
-      <dd>станция</dd>
+      <dd>идёт</dd>
     </div>
     <div class="legend__item">
       <dt class="legend__mark legend__mark--delayed" />
-      <dd>задержка</dd>
+      <dd>встал</dd>
     </div>
     <div class="legend__item">
       <dt class="legend__mark legend__mark--terminus" />
-      <dd>конечная</dd>
+      <dd>готово</dd>
     </div>
     <div class="legend__item">
       <dt class="legend__mark legend__mark--cut" />
-      <dd>съезд</dd>
+      <dd>бросил</dd>
     </div>
     <div class="legend__item">
       <dt class="legend__mark legend__mark--today" />
-      <dd>сегодня</dd>
+      <dd>сегодня, не отмечено</dd>
     </div>
   </dl>
 </template>
@@ -61,9 +61,24 @@
 }
 
 .legend__mark--cut {
+  position: relative;
+  width: 9px;
+  height: 9px;
   border: 0;
   background: var(--ink-3);
-  opacity: 0.5;
+}
+
+.legend__mark--cut::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 12px;
+  height: 5px;
+  background: var(--ink-3);
+  border-radius: var(--r-pill);
+  transform-origin: left center;
+  transform: translate(-2px, -2px) rotate(42deg);
 }
 
 .legend__mark--today {

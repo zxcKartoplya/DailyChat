@@ -218,11 +218,24 @@ const stationTitle = (date: string) => formatLongDate(date)
 }
 
 .route__station--cut {
-  width: 11px;
-  height: 11px;
+  width: 9px;
+  height: 9px;
   background: var(--line);
   border: 0;
-  opacity: 0.45;
+}
+
+.route__station--cut::after,
+.route__today--cut .route__today-mark::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 15px;
+  height: 6px;
+  background: var(--line);
+  border-radius: var(--r-pill);
+  transform-origin: left center;
+  transform: translate(-3px, -3px) rotate(42deg);
 }
 
 .route__today {
@@ -243,27 +256,27 @@ const stationTitle = (date: string) => formatLongDate(date)
 
 .route__today:hover .route__today-mark {
   border-color: var(--line);
-  transform: scale(1.06);
+  background: var(--surface-active);
 }
 
 .route__today-mark {
+  position: relative;
   width: 19px;
   height: 19px;
   background: var(--surface);
   border: 2px dashed var(--ink-3);
   border-radius: 50%;
-  transition: border-color var(--t-state) var(--ease), background-color var(--t-move) var(--ease), transform var(--t-state) var(--ease);
+  transition: border-color var(--t-state) var(--ease), background-color var(--t-move) var(--ease);
 }
 
 .route__today--marked .route__today-mark {
-  border: 4px solid var(--line);
-  background: var(--surface);
-  animation: station-set var(--t-move) var(--ease);
+  border: 2px solid var(--line);
+  background: var(--line);
 }
 
 .route__today--delayed .route__today-mark {
-  border-color: var(--alert);
-  box-shadow: inset 0 0 0 3px var(--surface), inset 0 0 0 8px var(--alert);
+  border: 4px solid var(--alert);
+  background: var(--surface);
 }
 
 .route__today--terminus .route__today-mark {
@@ -275,25 +288,13 @@ const stationTitle = (date: string) => formatLongDate(date)
 }
 
 .route__today--cut .route__today-mark {
+  width: 11px;
+  height: 11px;
   border: 0;
   background: var(--line);
-  opacity: 0.5;
-  width: 13px;
-  height: 13px;
-}
-
-@keyframes station-set {
-  from {
-    transform: scale(0.5);
-  }
-
-  to {
-    transform: scale(1);
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .route__today--marked .route__today-mark,
   .route__track--today {
     animation: none;
   }
