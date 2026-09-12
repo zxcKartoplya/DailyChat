@@ -7,31 +7,3 @@ export enum ApiHttpCode {
 }
 
 export type ApiQueryType = string | number | boolean
-
-export type ApiResponse<T> = {
-  data: T | T[]
-}
-
-export type ApiPaginatedResponse<T> = {
-  data: T[]
-  meta: {
-    current_page: number
-    from: number
-    last_page: number
-    per_page: number
-    to: number
-    total: number
-  }
-  links: {
-    first: string | null
-    last: string | null
-    prev: string | null
-    next: string | null
-  }
-}
-
-export type ApiSimpleResponse = {
-  success: boolean
-  message?: string
-  error?: string
-}
