@@ -6,7 +6,7 @@ export const useLoginApi = () => {
   const { usePost } = useApi()
 
   const postLoginUser = async (form: loginUser): Promise<ApiAuthorization> => {
-    return await usePost('api/auth/login', form)
+    return await usePost('/api/auth/login', form)
   }
   return { postLoginUser }
 }
