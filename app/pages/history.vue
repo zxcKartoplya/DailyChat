@@ -1,8 +1,9 @@
 <script lang="ts" setup>
 import { useDailyApi } from '~/composables/api/useDailyApi'
 import type { DailyEntry } from '~/types/daily'
-import { DayType, STATUS_LABEL } from '~/types/daily'
-import { formatLongDate, formatWeekday, relativeDayLabel } from '~/utils/date'
+import { DayType, ItemStatus, STATUS_LABEL } from '~/types/daily'
+import { formatLongDate, formatWeekday } from '~/utils/date'
+import { lineColorVar } from '~/utils/lineColor'
 
 definePageMeta({ layout: 'auth' })
 useHead({ title: 'История' })
@@ -21,6 +22,14 @@ const submittedTime = (entry: DailyEntry) => {
   })
 }
 
+const markModifier = (status: ItemStatus) => {
+  if (status === ItemStatus.BLOCKED) return 'entry__mark--delayed'
+  if (status === ItemStatus.DONE) return 'entry__mark--terminus'
+  if (status === ItemStatus.DROPPED) return 'entry__mark--cut'
+
+  return 'entry__mark--stop'
+}
+
 onMounted(async () => {
   try {
     entries.value = await getHistory()
@@ -37,21 +46,26 @@ onMounted(async () => {
         История
       </h1>
       <p class="history__lead">
-        Отправленные дни. Прошлые записи закрыты на изменения.
+        Отправленные дни. Прошлые записи закрыты на изменения — статусы прошлого не переписываются.
       </p>
     </header>
 
-    <p
+    <div
       v-if="loading"
-      class="history__loading"
+      class="history__skeleton"
       role="status"
+      aria-label="Загружаем записи"
     >
-      Загружаем записи…
-    </p>
+      <span
+        v-for="line in 2"
+        :key="line"
+        class="history__skeleton-card"
+      />
+    </div>
 
     <p
       v-else-if="!entries.length"
-      class="history__empty"
+      class="history__empty panel"
     >
       Записей пока нет. Первый отправленный дейлик появится здесь.
     </p>
@@ -63,43 +77,48 @@ onMounted(async () => {
       <li
         v-for="entry in entries"
         :key="entry.id"
-        class="history__day"
       >
-        <div class="history__day-head">
-          <h2 class="history__date">
-            <span class="num">{{ formatLongDate(entry.date) }}</span>
-            <span class="history__weekday">{{ formatWeekday(entry.date) }}</span>
-          </h2>
-          <p class="history__stamp">
-            {{ relativeDayLabel(entry.date) }}<template v-if="submittedTime(entry)">
-              , отправлен в <span class="num">{{ submittedTime(entry) }}</span>
-            </template>
-          </p>
-        </div>
+        <article class="entry panel">
+          <header class="entry__head">
+            <h2 class="entry__date">
+              <span class="num">{{ formatLongDate(entry.date) }}</span>
+              <span class="entry__weekday">{{ formatWeekday(entry.date) }}</span>
+            </h2>
+            <p
+              v-if="submittedTime(entry)"
+              class="entry__stamp"
+            >
+              отправлен в <span class="num">{{ submittedTime(entry) }}</span>
+            </p>
+          </header>
 
-        <p
-          v-if="entry.dayType === DayType.OFF"
-          class="history__off"
-        >
-          не работал
-        </p>
-
-        <ul
-          v-else
-          class="history__items"
-        >
-          <li
-            v-for="item in entry.items"
-            :key="item.id"
-            class="history__item"
+          <p
+            v-if="entry.dayType === DayType.OFF"
+            class="entry__off"
           >
-            <span class="history__glyph">
-              <DailyStatusGlyph :status="item.status" />
-            </span>
-            <span class="history__text">{{ item.text }}</span>
-            <span class="history__status">{{ STATUS_LABEL[item.status] }}</span>
-          </li>
-        </ul>
+            не работал
+          </p>
+
+          <ul
+            v-else
+            class="entry__items"
+          >
+            <li
+              v-for="item in entry.items"
+              :key="item.id"
+              class="entry__item"
+              :style="{ '--line': lineColorVar(item.chainId ?? String(item.id)) }"
+            >
+              <span
+                class="entry__mark"
+                :class="markModifier(item.status)"
+                aria-hidden="true"
+              />
+              <span class="entry__text">{{ item.text }}</span>
+              <span class="entry__status">{{ STATUS_LABEL[item.status] }}</span>
+            </li>
+          </ul>
+        </article>
       </li>
     </ol>
   </div>
@@ -109,7 +128,7 @@ onMounted(async () => {
 .history {
   display: flex;
   flex-direction: column;
-  gap: var(--s-5);
+  gap: var(--s-4);
   max-width: var(--content-max);
   padding-bottom: var(--s-7);
 }
@@ -118,100 +137,155 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: var(--s-1);
-  padding-bottom: var(--s-3);
-  border-bottom: 1px solid var(--grid-strong);
 }
 
 .history__title {
-  font-size: 1.5rem;
+  font-size: 1.75rem;
   font-weight: 600;
-  letter-spacing: -0.012em;
+  letter-spacing: -0.015em;
 }
 
-.history__lead,
-.history__loading,
-.history__empty {
+.history__lead {
   color: var(--ink-2);
   font-size: 0.9375rem;
   max-width: 62ch;
 }
 
+.history__skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.history__skeleton-card {
+  height: 8rem;
+  background: linear-gradient(100deg, var(--surface-sunken) 30%, var(--surface) 50%, var(--surface-sunken) 70%);
+  background-size: 300% 100%;
+  border-radius: var(--r-panel);
+  animation: skeleton 1.8s var(--ease) infinite;
+}
+
+@keyframes skeleton {
+  from {
+    background-position: 150% 0;
+  }
+
+  to {
+    background-position: -50% 0;
+  }
+}
+
+.history__empty {
+  padding: var(--s-5);
+  color: var(--ink-2);
+}
+
 .history__list {
   display: flex;
   flex-direction: column;
+  gap: var(--s-3);
 }
 
-.history__day {
-  padding: var(--s-4) 0;
-  border-bottom: 1px solid var(--grid);
+.entry {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding: var(--s-4) var(--s-5);
 }
 
-.history__day-head {
+.entry__head {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
+  justify-content: space-between;
   gap: var(--s-3);
-  margin-bottom: var(--s-3);
 }
 
-.history__date {
+.entry__date {
   display: flex;
   align-items: baseline;
   gap: var(--s-2);
-  font-size: 1rem;
-  font-weight: 500;
+  font-size: 1.0625rem;
+  font-weight: 600;
   color: var(--ink);
 }
 
-.history__weekday {
+.entry__weekday {
   font-size: 0.75rem;
+  font-weight: 400;
   color: var(--ink-3);
 }
 
-.history__stamp {
+.entry__stamp {
   font-size: 0.8125rem;
   color: var(--ink-3);
 }
 
-.history__off {
+.entry__off {
   color: var(--ink-3);
-  font-size: 0.9375rem;
 }
 
-.history__items {
+.entry__items {
   display: flex;
   flex-direction: column;
   gap: var(--s-2);
 }
 
-.history__item {
+.entry__item {
   display: grid;
   grid-template-columns: auto 1fr auto;
-  align-items: baseline;
+  align-items: center;
   gap: var(--s-3);
 }
 
-.history__glyph {
-  color: var(--ink-3);
-  transform: translateY(2px);
+.entry__mark {
+  flex: none;
+  width: 13px;
+  height: 13px;
+  background: var(--surface);
+  border: 3px solid var(--line);
+  border-radius: 50%;
 }
 
-.history__text {
+.entry__mark--delayed {
+  border-color: var(--alert);
+  box-shadow: inset 0 0 0 2px var(--surface), inset 0 0 0 6px var(--alert);
+}
+
+.entry__mark--terminus {
+  width: 5px;
+  height: 18px;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: var(--line);
+}
+
+.entry__mark--cut {
+  border: 0;
+  background: var(--line);
+  opacity: 0.5;
+}
+
+.entry__text {
   color: var(--ink);
-  max-width: 68ch;
+  max-width: 66ch;
 }
 
-.history__status {
+.entry__status {
   font-size: 0.75rem;
   color: var(--ink-3);
 }
 
 @media (max-width: 48rem) {
-  .history__item {
+  .entry {
+    padding: var(--s-4);
+  }
+
+  .entry__item {
     grid-template-columns: auto 1fr;
   }
 
-  .history__status {
+  .entry__status {
     grid-column: 2;
   }
 }

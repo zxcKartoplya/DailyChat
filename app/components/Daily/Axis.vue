@@ -34,7 +34,6 @@ const today = todayIso()
 .axis {
   display: grid;
   grid-template-columns: repeat(var(--axis-columns), 1fr);
-  border-bottom: 1px solid var(--grid-strong);
 }
 
 .axis__day {
@@ -42,30 +41,28 @@ const today = todayIso()
   flex-direction: column;
   align-items: center;
   gap: 1px;
-  padding-bottom: var(--s-1);
-  color: var(--ink-2);
-}
-
-.axis__day--weekend {
   color: var(--ink-3);
 }
 
+.axis__day--weekend {
+  opacity: 0.6;
+}
+
 .axis__day--today {
-  color: var(--accent-text);
+  color: var(--ink);
 }
 
 .axis__number {
-  font-size: 0.75rem;
-  line-height: 1;
+  font-size: 0.8125rem;
+  line-height: 1.1;
 }
 
 .axis__day--today .axis__number {
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .axis__weekday {
-  font-size: 0.625rem;
-  line-height: 1;
-  letter-spacing: 0.02em;
+  font-size: 0.6875rem;
+  line-height: 1.1;
 }
 </style>

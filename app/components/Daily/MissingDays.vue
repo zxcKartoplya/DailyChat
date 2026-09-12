@@ -51,10 +51,10 @@ const firstDay = computed(() => days[0] ?? '')
   align-items: center;
   justify-content: space-between;
   gap: var(--s-3);
-  padding: var(--s-2) var(--s-3);
+  padding: var(--s-2) var(--s-2) var(--s-2) var(--s-4);
   background: var(--surface);
-  border: 1px solid var(--grid-strong);
-  border-radius: var(--r-1);
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--r-pill);
 }
 
 .missing__text {
@@ -70,5 +70,15 @@ const firstDay = computed(() => days[0] ?? '')
 .missing__actions {
   display: flex;
   gap: var(--s-2);
+}
+
+@media (max-width: 48rem) {
+  .missing {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--s-2);
+    padding: var(--s-3) var(--s-4);
+    border-radius: var(--r-panel);
+  }
 }
 </style>

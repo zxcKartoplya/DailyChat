@@ -3,6 +3,7 @@ import { useDailyApi } from '~/composables/api/useDailyApi'
 import type { OpenChain } from '~/types/daily'
 import { ItemStatus } from '~/types/daily'
 import { lastDays, todayIso } from '~/utils/date'
+import { lineColorVar } from '~/utils/lineColor'
 import { plural, pluralDays } from '~/utils/plural'
 
 definePageMeta({ layout: 'auth' })
@@ -17,9 +18,7 @@ const days = computed(() => lastDays(14))
 
 const blocked = computed(() => chains.value.filter(chain => chain.lastStatus === ItemStatus.BLOCKED))
 
-const longestSilence = computed(() => {
-  return chains.value.reduce((max, chain) => Math.max(max, chain.daysOpen), 0)
-})
+const longest = computed(() => chains.value.reduce((max, chain) => Math.max(max, chain.daysOpen), 0))
 
 onMounted(async () => {
   try {
@@ -52,14 +51,16 @@ onMounted(async () => {
 
     <template v-else>
       <p class="analytics__summary">
-        Открыто <span class="num">{{ chains.length }}</span>
-        {{ plural(chains.length, ['линия', 'линии', 'линий']) }},
-        из них <span class="num">{{ blocked.length }}</span>
-        {{ plural(blocked.length, ['стоит', 'стоят', 'стоят']) }} в блокере.
-        Самая давняя открыта <span class="num">{{ pluralDays(longestSilence) }}</span>.
+        Сейчас в пути <span class="num analytics__figure">{{ chains.length }}</span>
+        {{ plural(chains.length, ['линия', 'линии', 'линий']) }}.
+        <template v-if="blocked.length">
+          <span class="num analytics__figure analytics__figure--alert">{{ blocked.length }}</span>
+          {{ plural(blocked.length, ['стоит', 'стоят', 'стоят']) }} в задержке.
+        </template>
+        Самая давняя идёт <span class="num analytics__figure">{{ pluralDays(longest) }}</span>.
       </p>
 
-      <section class="analytics__chart">
+      <section class="analytics__map panel">
         <div class="analytics__axis">
           <DailyAxis :days="days" />
         </div>
@@ -70,13 +71,19 @@ onMounted(async () => {
             :key="chain.chainId"
             class="analytics__row"
           >
-            <span class="analytics__name">{{ chain.title }}</span>
-            <span class="analytics__thread">
-              <DailyThread
-                :days="days"
-                :history="chain.history"
+            <span class="analytics__name">
+              <span
+                class="analytics__badge"
+                :style="{ background: lineColorVar(chain.chainId) }"
+                aria-hidden="true"
               />
+              {{ chain.title }}
             </span>
+            <DailyRoute
+              :days="days"
+              :history="chain.history"
+              :color="lineColorVar(chain.chainId)"
+            />
           </li>
         </ul>
 
@@ -88,16 +95,17 @@ onMounted(async () => {
         class="analytics__blockers"
       >
         <h2 class="analytics__section-title">
-          Что мешает прямо сейчас
+          Что стоит прямо сейчас
         </h2>
         <ul class="analytics__blocker-list">
           <li
             v-for="chain in blocked"
             :key="chain.chainId"
-            class="analytics__blocker"
+            class="analytics__blocker panel"
           >
+            <span class="analytics__blocker-title">{{ chain.title }}</span>
             <span class="analytics__blocker-text">{{ chain.lastText }}</span>
-            <span class="analytics__blocker-meta num">{{ pluralDays(chain.daysOpen) }}</span>
+            <span class="analytics__blocker-meta num">{{ pluralDays(chain.daysOpen) }} в пути</span>
           </li>
         </ul>
       </section>
@@ -118,14 +126,12 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: var(--s-1);
-  padding-bottom: var(--s-3);
-  border-bottom: 1px solid var(--grid-strong);
 }
 
 .analytics__title {
-  font-size: 1.5rem;
+  font-size: 1.75rem;
   font-weight: 600;
-  letter-spacing: -0.012em;
+  letter-spacing: -0.015em;
 }
 
 .analytics__lead,
@@ -136,26 +142,32 @@ onMounted(async () => {
 }
 
 .analytics__summary {
-  font-size: 1.0625rem;
+  font-size: 1.125rem;
   line-height: 1.6;
   color: var(--ink);
-  max-width: 54ch;
+  max-width: 52ch;
 }
 
-.analytics__summary .num {
-  font-size: 1.25rem;
+.analytics__figure {
+  font-size: 1.5rem;
+  font-weight: 600;
   color: var(--accent-text);
 }
 
-.analytics__chart {
+.analytics__figure--alert {
+  color: var(--alert);
+}
+
+.analytics__map {
   display: flex;
   flex-direction: column;
   gap: var(--s-2);
+  padding: var(--s-4) var(--s-5) var(--s-5);
 }
 
 .analytics__axis {
   margin-left: auto;
-  width: min(100%, 31.5rem);
+  width: min(100%, 26rem);
 }
 
 .analytics__rows {
@@ -165,20 +177,28 @@ onMounted(async () => {
 
 .analytics__row {
   display: grid;
-  grid-template-columns: 1fr min(60%, 31.5rem);
+  grid-template-columns: 1fr min(55%, 26rem);
   align-items: center;
   gap: var(--s-4);
-  padding: var(--s-2) 0;
-  border-bottom: 1px solid var(--grid);
 }
 
 .analytics__name {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
   font-size: 0.9375rem;
   color: var(--ink);
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.analytics__badge {
+  flex: none;
+  width: 6px;
+  height: 1.25rem;
+  border-radius: var(--r-pill);
 }
 
 .analytics__section-title {
@@ -191,26 +211,30 @@ onMounted(async () => {
 .analytics__blocker-list {
   display: flex;
   flex-direction: column;
+  gap: var(--s-2);
 }
 
 .analytics__blocker {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--s-3);
-  padding: var(--s-2) 0;
-  border-bottom: 1px solid var(--grid);
+  flex-direction: column;
+  gap: var(--s-1);
+  padding: var(--s-3) var(--s-4);
+  border-color: color-mix(in srgb, var(--alert) 35%, var(--hairline));
+}
+
+.analytics__blocker-title {
+  font-weight: 600;
+  color: var(--ink);
 }
 
 .analytics__blocker-text {
-  color: var(--ink);
-  max-width: 62ch;
+  color: var(--ink-2);
+  max-width: 66ch;
 }
 
 .analytics__blocker-meta {
   font-size: 0.8125rem;
-  color: var(--signal);
+  color: var(--alert);
 }
 
 @media (max-width: 60rem) {
@@ -221,7 +245,7 @@ onMounted(async () => {
 
   .analytics__row {
     grid-template-columns: 1fr;
-    gap: var(--s-1);
+    gap: 0;
   }
 
   .analytics__name {

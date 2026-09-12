@@ -79,7 +79,7 @@ const exitAccount = () => {
   flex-direction: column;
   gap: var(--s-1);
   padding-bottom: var(--s-3);
-  border-bottom: 1px solid var(--grid-strong);
+  border-bottom: 1px solid var(--hairline-strong);
 }
 
 .profile__title {
@@ -98,7 +98,7 @@ const exitAccount = () => {
   flex-direction: column;
   gap: var(--s-2);
   padding-bottom: var(--s-4);
-  border-bottom: 1px solid var(--grid);
+  border-bottom: 1px solid var(--hairline);
 }
 
 .profile__section-title {

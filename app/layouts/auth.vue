@@ -62,10 +62,10 @@ const exitAccount = () => {
 <style scoped>
 .shell {
   display: grid;
-  grid-template-columns: var(--nav-w) 1fr;
+  grid-template-columns: var(--nav-w) minmax(0, 1fr);
   min-height: 100vh;
   min-height: 100dvh;
-  background: var(--paper);
+  background: var(--ground);
 }
 
 .shell__nav {
@@ -73,7 +73,7 @@ const exitAccount = () => {
   flex-direction: column;
   gap: var(--s-5);
   padding: var(--s-4) var(--s-3);
-  border-right: 1px solid var(--grid);
+  border-right: 1px solid var(--hairline);
   position: sticky;
   top: 0;
   height: 100vh;
@@ -98,7 +98,7 @@ const exitAccount = () => {
   height: var(--ctrl-h);
   padding: 0 var(--s-2);
   color: var(--ink-2);
-  border-radius: var(--r-1);
+  border-radius: var(--r-pill);
   font-size: 0.9375rem;
   transition: color var(--t-state) var(--ease), background-color var(--t-state) var(--ease);
 }
@@ -126,7 +126,7 @@ const exitAccount = () => {
   flex-direction: column;
   gap: var(--s-3);
   padding-top: var(--s-3);
-  border-top: 1px solid var(--grid);
+  border-top: 1px solid var(--hairline);
 }
 
 .shell__exit {
@@ -137,7 +137,7 @@ const exitAccount = () => {
   padding: 0 var(--s-2);
   background: none;
   border: 0;
-  border-radius: var(--r-1);
+  border-radius: var(--r-pill);
   color: var(--ink-3);
   font: inherit;
   font-size: 0.8125rem;
@@ -157,44 +157,58 @@ const exitAccount = () => {
 
 @media (max-width: 60rem) {
   .shell {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .shell__nav {
     position: sticky;
     top: 0;
     z-index: 20;
+    min-width: 0;
     height: auto;
     flex-direction: row;
     align-items: center;
-    gap: var(--s-4);
+    justify-content: space-between;
+    gap: var(--s-3);
     padding: var(--s-2) var(--s-4);
-    background: var(--paper);
+    background: var(--ground);
     border-right: 0;
-    border-bottom: 1px solid var(--grid-strong);
+    border-bottom: 1px solid var(--hairline);
   }
 
   .shell__links {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 30;
+    flex: none;
     flex-direction: row;
     gap: var(--s-1);
-    overflow-x: auto;
-    flex: 1;
-  }
-
-  .shell__link span {
-    display: none;
+    padding: var(--s-1) var(--s-2) calc(var(--s-2) + env(safe-area-inset-bottom));
+    background: var(--surface);
+    border-top: 1px solid var(--hairline);
   }
 
   .shell__link {
-    width: var(--ctrl-h);
+    flex: 1;
+    flex-direction: column;
     justify-content: center;
+    gap: 2px;
+    height: 3.25rem;
+    padding: 0;
+    border-radius: var(--r-field);
+    font-size: 0.6875rem;
+  }
+
+  .shell__link--active {
+    background: transparent;
   }
 
   .shell__link-icon {
-    font-size: 1.125rem;
+    font-size: 1.25rem;
   }
 
   .shell__foot {
+    flex: none;
     flex-direction: row;
     align-items: center;
     gap: var(--s-2);
@@ -206,8 +220,14 @@ const exitAccount = () => {
     display: none;
   }
 
+  .shell__exit {
+    width: var(--ctrl-h-sm);
+    justify-content: center;
+    padding: 0;
+  }
+
   .shell__main {
-    padding: var(--s-4) var(--s-4) var(--s-6);
+    padding: var(--s-4) var(--s-4) 5.5rem;
   }
 }
 </style>

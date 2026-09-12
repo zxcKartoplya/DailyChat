@@ -51,47 +51,44 @@ const onSubmit = async () => {
     <div class="login__panel">
       <AppLogo class="login__brand" />
 
-      <div class="login__thread">
+      <div class="login__map">
         <svg
-          viewBox="0 0 240 24"
-          width="240"
-          height="24"
+          viewBox="0 0 260 96"
+          width="260"
+          height="96"
           aria-hidden="true"
         >
-          <g class="login__grid">
-            <line
-              v-for="n in 7"
-              :key="n"
-              :x1="(n - 1) * 36"
-              y1="0"
-              :x2="(n - 1) * 36"
-              y2="24"
-            />
-          </g>
-          <line
-            class="login__line"
-            x1="0"
-            y1="12"
-            x2="200"
-            y2="12"
+          <path
+            class="login__line login__line--1"
+            d="M8 28 H70 L104 62 H196"
+          />
+          <path
+            class="login__line login__line--2"
+            d="M8 76 H86 L120 42 H252"
           />
           <circle
-            class="login__node"
-            cx="54"
-            cy="12"
-            r="3.2"
+            class="login__stop login__stop--1"
+            cx="70"
+            cy="28"
+            r="6"
           />
           <circle
-            class="login__node"
-            cx="126"
-            cy="12"
-            r="3.2"
+            class="login__stop login__stop--2"
+            cx="120"
+            cy="42"
+            r="6"
           />
           <circle
-            class="login__node login__node--open"
-            cx="200"
-            cy="12"
-            r="3.2"
+            class="login__stop login__stop--1"
+            cx="152"
+            cy="62"
+            r="6"
+          />
+          <circle
+            class="login__interchange"
+            cx="104"
+            cy="62"
+            r="9"
           />
         </svg>
       </div>
@@ -168,7 +165,7 @@ const onSubmit = async () => {
   min-height: 100vh;
   min-height: 100dvh;
   padding: var(--s-5) var(--s-4);
-  background: var(--paper);
+  background: var(--ground);
 }
 
 .login__panel {
@@ -176,38 +173,56 @@ const onSubmit = async () => {
   flex-direction: column;
   gap: var(--s-3);
   width: 100%;
-  max-width: 23rem;
+  max-width: 24rem;
+  padding: var(--s-6) var(--s-5);
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-panel);
 }
 
 .login__brand {
   margin-bottom: var(--s-4);
 }
 
-.login__thread svg {
+.login__map svg {
   display: block;
   width: 100%;
   height: auto;
-  max-width: 15rem;
-}
-
-.login__grid line {
-  stroke: var(--grid);
-  stroke-width: 1;
+  max-width: 16rem;
 }
 
 .login__line {
-  stroke: var(--ink-2);
-  stroke-width: 1.6;
+  fill: none;
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
-.login__node {
-  fill: var(--ink-2);
+.login__line--1 {
+  stroke: var(--line-2);
 }
 
-.login__node--open {
+.login__line--2 {
+  stroke: var(--line-1);
+}
+
+.login__stop {
   fill: var(--surface);
-  stroke: var(--accent);
-  stroke-width: 1.6;
+  stroke-width: 3;
+}
+
+.login__stop--1 {
+  stroke: var(--line-2);
+}
+
+.login__stop--2 {
+  stroke: var(--line-1);
+}
+
+.login__interchange {
+  fill: var(--surface);
+  stroke: var(--ink);
+  stroke-width: 3;
 }
 
 .login__title {
@@ -243,19 +258,18 @@ const onSubmit = async () => {
 
 .login__error {
   font-size: 0.75rem;
-  color: var(--signal);
+  color: var(--alert);
 }
 
 .login__failed {
   font-size: 0.875rem;
-  color: var(--signal);
-  padding: var(--s-2) var(--s-3);
-  background: var(--signal-weak);
-  border-radius: var(--r-1);
+  color: var(--alert);
+  padding: var(--s-2) var(--s-4);
+  background: var(--alert-weak);
+  border-radius: var(--r-pill);
 }
 
 .login__submit {
-  align-self: flex-start;
-  min-width: 8rem;
+  width: 100%;
 }
 </style>

@@ -34,27 +34,24 @@ const options = [
 <style scoped>
 .toggle {
   display: inline-flex;
-  border: 1px solid var(--grid);
-  border-radius: var(--r-1);
-  overflow: hidden;
+  align-self: flex-start;
+  padding: 3px;
+  background: var(--surface-sunken);
+  border-radius: var(--r-pill);
 }
 
 .toggle__option {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 1.875rem;
+  width: 2.125rem;
+  height: 2rem;
   background: transparent;
   color: var(--ink-3);
   border: 0;
-  border-right: 1px solid var(--grid);
+  border-radius: var(--r-pill);
   cursor: pointer;
   transition: color var(--t-state) var(--ease), background-color var(--t-state) var(--ease);
-}
-
-.toggle__option:last-child {
-  border-right: 0;
 }
 
 .toggle__option:hover {
@@ -63,7 +60,8 @@ const options = [
 }
 
 .toggle__option--active {
-  color: var(--accent-text);
-  background: var(--accent-weak);
+  color: var(--ink);
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgba(35, 40, 46, 0.12);
 }
 </style>

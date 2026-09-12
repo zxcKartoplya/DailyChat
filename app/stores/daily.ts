@@ -4,6 +4,7 @@ import { DayType, EntryStatus, ItemStatus } from '~/types/daily'
 import { todayIso } from '~/utils/date'
 
 type ChainDraft = {
+  marked: boolean
   text: string
   status: ItemStatus
 }
@@ -43,16 +44,10 @@ export const useDailyStore = defineStore('daily', () => {
   const missingDays = computed(() => day.value?.missingDays ?? [])
 
   const chainDraft = (chainId: string): ChainDraft => {
-    return chainDrafts.value[chainId] ?? { text: '', status: ItemStatus.IN_PROGRESS }
+    return chainDrafts.value[chainId] ?? { marked: false, text: '', status: ItemStatus.IN_PROGRESS }
   }
 
-  const isChainTouched = (chainId: string): boolean => {
-    const draft = chainDrafts.value[chainId]
-
-    if (!draft) return false
-
-    return draft.text.trim().length > 0 || draft.status !== ItemStatus.IN_PROGRESS
-  }
+  const isChainTouched = (chainId: string): boolean => chainDraft(chainId).marked
 
   const items = computed<DraftItem[]>(() => {
     if (isDayOff.value) return []
@@ -91,7 +86,10 @@ export const useDailyStore = defineStore('daily', () => {
       }
 
       if (parsed.chainDrafts) chainDrafts.value = parsed.chainDrafts
-      if (parsed.newItems?.length) newItems.value = parsed.newItems
+
+      const restored = parsed.newItems?.filter(item => item.text.trim().length > 0) ?? []
+
+      if (restored.length) newItems.value = restored
       if (parsed.dayType) dayType.value = parsed.dayType
     } catch {
       localStorage.removeItem(draftStorageKey(date.value))
@@ -141,7 +139,7 @@ export const useDailyStore = defineStore('daily', () => {
           return
         }
 
-        chainDrafts.value[item.chainId] = { text: item.text, status: item.status }
+        chainDrafts.value[item.chainId] = { marked: true, text: item.text, status: item.status }
       })
 
       readLocalDraft()
@@ -177,12 +175,22 @@ export const useDailyStore = defineStore('daily', () => {
   }
 
   const setChainText = (chainId: string, text: string) => {
-    chainDrafts.value[chainId] = { ...chainDraft(chainId), text }
+    chainDrafts.value[chainId] = { ...chainDraft(chainId), marked: true, text }
     scheduleSave()
   }
 
   const setChainStatus = (chainId: string, status: ItemStatus) => {
-    chainDrafts.value[chainId] = { ...chainDraft(chainId), status }
+    chainDrafts.value[chainId] = { ...chainDraft(chainId), marked: true, status }
+    scheduleSave()
+  }
+
+  const toggleChainMark = (chainId: string) => {
+    const draft = chainDraft(chainId)
+
+    chainDrafts.value[chainId] = draft.marked
+      ? { marked: false, text: '', status: ItemStatus.IN_PROGRESS }
+      : { ...draft, marked: true }
+
     scheduleSave()
   }
 
@@ -272,6 +280,7 @@ export const useDailyStore = defineStore('daily', () => {
     load,
     setChainText,
     setChainStatus,
+    toggleChainMark,
     setNewItems,
     setDayType,
     markDaysOff,

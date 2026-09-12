@@ -3,6 +3,7 @@ import { useDailyStore } from '~/stores/daily'
 import type { DraftItem } from '~/types/daily'
 import { DayType } from '~/types/daily'
 import { formatLongDate, lastDays, todayIso } from '~/utils/date'
+import { plural } from '~/utils/plural'
 
 definePageMeta({ layout: 'auth' })
 
@@ -10,8 +11,8 @@ const store = useDailyStore()
 const toast = useToast()
 
 const days = computed(() => lastDays(7, store.date))
-
 const title = computed(() => `Дейлик за ${formatLongDate(store.date)}`)
+const markedCount = computed(() => store.items.length)
 
 const submittedTime = computed(() => {
   if (!store.submittedAt) return ''
@@ -40,19 +41,11 @@ const onSubmit = async () => {
   }
 }
 
-const onMarkOff = async () => {
-  await store.setDayType(store.isDayOff ? DayType.WORK : DayType.OFF)
-}
-
-const onFillMissing = (date: string) => store.load(date)
-
-const onMissingOff = (dates: string[]) => store.markDaysOff(dates)
+const onMarkOff = () => store.setDayType(store.isDayOff ? DayType.WORK : DayType.OFF)
 
 onMounted(() => {
   void store.load(todayIso())
 })
-
-useHead({ title: 'Дейлик' })
 </script>
 
 <template>
@@ -64,9 +57,9 @@ useHead({ title: 'Дейлик' })
       aria-label="Загружаем день"
     >
       <span
-        v-for="line in 5"
+        v-for="line in 3"
         :key="line"
-        class="daily__skeleton-line"
+        class="daily__skeleton-card"
       />
     </div>
 
@@ -75,8 +68,8 @@ useHead({ title: 'Дейлик' })
         v-if="store.missingDays.length && store.isToday"
         :days="store.missingDays"
         :busy="store.saving"
-        @fill="onFillMissing"
-        @mark-off="onMissingOff"
+        @fill="store.load($event)"
+        @mark-off="store.markDaysOff($event)"
       />
 
       <header class="daily__head">
@@ -84,23 +77,19 @@ useHead({ title: 'Дейлик' })
           <h1 class="daily__title">
             {{ title }}
           </h1>
-          <p
+          <button
             v-if="!store.isToday"
-            class="daily__note"
+            type="button"
+            class="daily__back"
+            @click="store.load(todayIso())"
           >
-            <button
-              type="button"
-              class="daily__back"
-              @click="store.load(todayIso())"
-            >
-              вернуться к сегодняшнему дню
-            </button>
-          </p>
+            вернуться к сегодняшнему дню
+          </button>
         </div>
 
         <button
           type="button"
-          class="btn btn--ghost daily__off"
+          class="btn btn--ghost"
           :class="{ 'daily__off--on': store.isDayOff }"
           :aria-pressed="store.isDayOff"
           :disabled="!store.isEditable"
@@ -112,7 +101,7 @@ useHead({ title: 'Дейлик' })
 
       <p
         v-if="store.isDayOff"
-        class="daily__off-state"
+        class="daily__off-state panel"
       >
         День отмечен нерабочим. Пунктов в нём нет, линии останутся открытыми и придут завтра.
       </p>
@@ -124,40 +113,47 @@ useHead({ title: 'Дейлик' })
         >
           <div class="daily__section-head">
             <h2 class="daily__section-title">
-              Продолжается
+              В пути
             </h2>
-            <div class="daily__axis">
-              <DailyAxis :days="days" />
-            </div>
+            <DailyLegend />
           </div>
 
-          <div class="daily__axis daily__axis--mobile">
+          <p
+            v-if="store.isEditable"
+            class="daily__hint"
+          >
+            Тапни станцию за сегодня на тех линиях, где что-то было. Где не было — пропусти, линия придёт завтра.
+          </p>
+
+          <div class="daily__axis">
             <DailyAxis :days="days" />
           </div>
 
-          <DailyChainRow
-            v-for="chain in store.openChains"
-            :key="chain.chainId"
-            :chain="chain"
-            :days="days"
-            :editable="store.isEditable"
-            :text="store.chainDraft(chain.chainId).text"
-            :status="store.chainDraft(chain.chainId).status"
-            @update:text="store.setChainText(chain.chainId, $event)"
-            @update:status="store.setChainStatus(chain.chainId, $event)"
-          />
-
-          <DailyLegend />
+          <div class="daily__lines">
+            <DailyLineCard
+              v-for="chain in store.openChains"
+              :key="chain.chainId"
+              :chain="chain"
+              :days="days"
+              :marked="store.isChainTouched(chain.chainId)"
+              :editable="store.isEditable"
+              :text="store.chainDraft(chain.chainId).text"
+              :status="store.chainDraft(chain.chainId).status"
+              @update:text="store.setChainText(chain.chainId, $event)"
+              @update:status="store.setChainStatus(chain.chainId, $event)"
+              @toggle-mark="store.toggleChainMark(chain.chainId)"
+            />
+          </div>
         </section>
 
         <section class="daily__section">
           <div class="daily__section-head">
             <h2 class="daily__section-title">
-              Новое
+              Новая ветка
             </h2>
           </div>
 
-          <DailyNewList
+          <DailyNewBranch
             v-model="newItemsModel"
             :editable="store.isEditable"
           />
@@ -166,7 +162,7 @@ useHead({ title: 'Дейлик' })
 
       <footer class="daily__foot">
         <p class="daily__visibility">
-          Это видит твой руководитель — и записи, и причины блокеров.
+          Это видит твой руководитель — и записи, и причины задержек.
         </p>
 
         <div class="daily__actions">
@@ -184,14 +180,11 @@ useHead({ title: 'Дейлик' })
                 повторить
               </button>
             </template>
-            <template v-else-if="store.saving">
-              сохраняю…
-            </template>
             <template v-else-if="store.isSubmitted">
               отправлен в <span class="num">{{ submittedTime }}</span>
             </template>
-            <template v-else-if="store.savedAt">
-              черновик сохранён
+            <template v-else-if="markedCount">
+              {{ markedCount }} {{ plural(markedCount, ['пункт', 'пункта', 'пунктов']) }}
             </template>
           </p>
 
@@ -212,8 +205,6 @@ useHead({ title: 'Дейлик' })
 
 <style scoped>
 .daily {
-  --rail-w: 15.75rem;
-
   display: flex;
   flex-direction: column;
   gap: var(--s-4);
@@ -224,67 +215,42 @@ useHead({ title: 'Дейлик' })
 .daily__skeleton {
   display: flex;
   flex-direction: column;
-  gap: var(--s-4);
+  gap: var(--s-3);
   padding-top: var(--s-5);
 }
 
-.daily__skeleton-line {
-  height: 1px;
-  background: var(--grid);
-  position: relative;
+.daily__skeleton-card {
+  height: 7.5rem;
+  background: linear-gradient(100deg, var(--surface-sunken) 30%, var(--surface) 50%, var(--surface-sunken) 70%);
+  background-size: 300% 100%;
+  border-radius: var(--r-panel);
+  animation: skeleton 1.8s var(--ease) infinite;
 }
 
-.daily__skeleton-line::after {
-  content: '';
-  position: absolute;
-  inset-block: -1px;
-  left: 0;
-  width: 40%;
-  background: var(--grid-strong);
-  animation: skeleton 1.6s var(--ease) infinite;
+.daily__skeleton-card:nth-child(2) {
+  animation-delay: 140ms;
 }
 
-.daily__skeleton-line:nth-child(2)::after {
-  animation-delay: 120ms;
-}
-
-.daily__skeleton-line:nth-child(3)::after {
-  animation-delay: 240ms;
-}
-
-.daily__skeleton-line:nth-child(4)::after {
-  animation-delay: 360ms;
-}
-
-.daily__skeleton-line:nth-child(5)::after {
-  animation-delay: 480ms;
+.daily__skeleton-card:nth-child(3) {
+  animation-delay: 280ms;
 }
 
 @keyframes skeleton {
-  0% {
-    transform: translateX(-30%) scaleX(0.4);
-    opacity: 0.4;
+  from {
+    background-position: 150% 0;
   }
 
-  50% {
-    transform: translateX(60%) scaleX(1);
-    opacity: 1;
-  }
-
-  100% {
-    transform: translateX(150%) scaleX(0.4);
-    opacity: 0.4;
+  to {
+    background-position: -50% 0;
   }
 }
 
 .daily__head {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: var(--s-3);
-  padding-bottom: var(--s-3);
-  border-bottom: 1px solid var(--grid-strong);
 }
 
 .daily__heading {
@@ -294,23 +260,20 @@ useHead({ title: 'Дейлик' })
 }
 
 .daily__title {
-  font-size: 1.5rem;
+  font-size: 1.75rem;
   font-weight: 600;
-  letter-spacing: -0.012em;
+  letter-spacing: -0.015em;
   color: var(--ink);
-}
-
-.daily__note {
-  font-size: 0.8125rem;
-  color: var(--ink-2);
 }
 
 .daily__back,
 .daily__retry {
+  align-self: flex-start;
+  padding: 0;
   background: none;
   border: 0;
-  padding: 0;
   font: inherit;
+  font-size: 0.8125rem;
   color: var(--accent-text);
   cursor: pointer;
   text-decoration: underline;
@@ -323,7 +286,7 @@ useHead({ title: 'Дейлик' })
 }
 
 .daily__off-state {
-  padding: var(--s-4) 0;
+  padding: var(--s-4) var(--s-5);
   color: var(--ink-2);
   max-width: 62ch;
 }
@@ -331,15 +294,22 @@ useHead({ title: 'Дейлик' })
 .daily__section {
   display: flex;
   flex-direction: column;
-  padding-top: var(--s-4);
+  gap: var(--s-3);
+  padding-top: var(--s-3);
 }
 
 .daily__section-head {
-  display: grid;
-  grid-template-columns: 1fr var(--rail-w);
-  align-items: end;
-  gap: var(--s-5);
-  padding-bottom: var(--s-2);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-3) var(--s-5);
+}
+
+.daily__hint {
+  font-size: 0.8125rem;
+  color: var(--ink-3);
+  max-width: 64ch;
 }
 
 .daily__section-title {
@@ -348,8 +318,14 @@ useHead({ title: 'Дейлик' })
   color: var(--ink-2);
 }
 
-.daily__axis--mobile {
-  display: none;
+.daily__axis {
+  padding: 0 var(--s-5);
+}
+
+.daily__lines {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
 }
 
 .daily__foot {
@@ -358,9 +334,9 @@ useHead({ title: 'Дейлик' })
   align-items: center;
   justify-content: space-between;
   gap: var(--s-3);
-  margin-top: var(--s-5);
+  margin-top: var(--s-4);
   padding-top: var(--s-4);
-  border-top: 1px solid var(--grid-strong);
+  border-top: 1px solid var(--hairline);
 }
 
 .daily__visibility {
@@ -385,26 +361,18 @@ useHead({ title: 'Дейлик' })
 }
 
 .daily__state-failed {
-  color: var(--signal);
-}
-
-@media (max-width: 60rem) {
-  .daily__section-head {
-    grid-template-columns: 1fr;
-    gap: var(--s-2);
-  }
-
-  .daily__section-head .daily__axis {
-    display: none;
-  }
-
-  .daily__axis--mobile {
-    display: block;
-    padding-bottom: var(--s-1);
-  }
+  color: var(--alert);
 }
 
 @media (max-width: 48rem) {
+  .daily__axis {
+    padding: 0 var(--s-4);
+  }
+
+  .daily__title {
+    font-size: 1.5rem;
+  }
+
   .daily__foot {
     flex-direction: column;
     align-items: stretch;
