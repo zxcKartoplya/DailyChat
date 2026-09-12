@@ -8,7 +8,8 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "lint": "eslint .",
-    "typecheck": "nuxt typecheck"
+    "typecheck": "nuxt typecheck",
+    "api:types": "openapi-typescript ${API_SCHEMA:-http://127.0.0.1:8000/openapi.json} -o app/types/api.generated.ts"
   },
   "dependencies": {
     "@iconify-json/lucide": "^1.2.108",
@@ -25,6 +26,7 @@
     "@nuxt/eslint": "^1.15.2",
     "@types/node": "^25.9.3",
     "eslint": "^10.4.0",
+    "openapi-typescript": "^7.13.0",
     "typescript": "^6.0.3",
     "vue-tsc": "^3.3.0"
   },

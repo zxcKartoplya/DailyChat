@@ -1,3 +1,3 @@
-export type ApiAuthorization = {
-  access_token: string
-}
+import type { Schemas } from '~/types/schemas'
+
+export type ApiAuthorization = Schemas['TokenResponse']

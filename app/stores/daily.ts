@@ -1,5 +1,5 @@
 import { useDailyApi } from '~/composables/api/useDailyApi'
-import type { DailyDay, DraftItem } from '~/types/daily'
+import type { DailyDay, DailyEntry, DraftItem } from '~/types/daily'
 import { DayType, EntryStatus, ItemStatus } from '~/types/daily'
 import { todayIso } from '~/utils/date'
 
@@ -149,14 +149,21 @@ export const useDailyStore = defineStore('daily', () => {
     }
   }
 
+  const applyEntry = (entry: DailyEntry) => {
+    if (!day.value) return
+
+    day.value = { ...day.value, entry }
+    submittedAt.value = entry.status === EntryStatus.SUBMITTED ? entry.submittedAt : null
+  }
+
   const persist = async () => {
-    if (!day.value?.entry || !isEditable.value) return
+    if (!isEditable.value) return
 
     saving.value = true
     saveFailed.value = false
 
     try {
-      await api.saveItems(day.value.entry.id, items.value)
+      applyEntry(await api.saveDay(date.value, dayType.value, items.value))
       savedAt.value = new Date().toISOString()
     } catch {
       saveFailed.value = true
@@ -204,12 +211,12 @@ export const useDailyStore = defineStore('daily', () => {
     dayType.value = value
     writeLocalDraft()
 
-    if (!day.value?.entry) return
+    if (!isEditable.value) return
 
     saving.value = true
 
     try {
-      await api.setDayType(day.value.entry.id, value)
+      applyEntry(await api.saveDay(date.value, value, items.value))
       savedAt.value = new Date().toISOString()
     } catch {
       saveFailed.value = true
@@ -224,7 +231,7 @@ export const useDailyStore = defineStore('daily', () => {
     saving.value = true
 
     try {
-      await Promise.all(dates.map(() => api.setDayType(day.value?.entry?.id ?? 0, DayType.OFF)))
+      await api.markDaysOff(dates)
       day.value = {
         ...day.value,
         missingDays: day.value.missingDays.filter(date => !dates.includes(date))
@@ -237,7 +244,7 @@ export const useDailyStore = defineStore('daily', () => {
   }
 
   const submit = async () => {
-    if (!day.value?.entry || !canSubmit.value) return
+    if (!canSubmit.value || !isEditable.value) return
 
     if (saveTimer) clearTimeout(saveTimer)
 
@@ -245,8 +252,8 @@ export const useDailyStore = defineStore('daily', () => {
     saveFailed.value = false
 
     try {
-      await api.saveItems(day.value.entry.id, items.value)
-      submittedAt.value = await api.submitEntry(day.value.entry.id)
+      await api.saveDay(date.value, dayType.value, items.value)
+      applyEntry(await api.submitEntry(date.value))
       savedAt.value = submittedAt.value
     } catch {
       saveFailed.value = true
