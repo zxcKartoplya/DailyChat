@@ -2,13 +2,8 @@ export default defineAppConfig({
   ui: {
     colors: {
       primary: 'blue',
-      secondary: 'sky',
+      secondary: 'blue',
       neutral: 'zinc'
-    },
-    button: {
-      slots: {
-        base: 'cursor-pointer'
-      }
     }
   }
 })
