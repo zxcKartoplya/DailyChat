@@ -48,7 +48,7 @@ const options = [
   height: 2rem;
   background: transparent;
   color: var(--ink-3);
-  border: 0;
+  border: 1px solid transparent;
   border-radius: var(--r-pill);
   cursor: pointer;
   transition: color var(--t-state) var(--ease), background-color var(--t-state) var(--ease);
@@ -62,6 +62,6 @@ const options = [
 .toggle__option--active {
   color: var(--ink);
   background: var(--surface);
-  box-shadow: 0 1px 2px rgba(35, 40, 46, 0.12);
+  border: 1px solid var(--hairline-strong);
 }
 </style>

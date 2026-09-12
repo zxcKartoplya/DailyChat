@@ -1,0 +1,182 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-13T00:00:00Z",
+  "title": "Design System: Дейлик",
+  "extensions": {
+    "themes": {
+      "light": { "label": "тёплый фарфор", "selector": ":root" },
+      "dark": { "label": "ночная эмаль", "selector": ":root[data-theme='dark'], @media (prefers-color-scheme: dark)" }
+    },
+    "colorMeta": {
+      "ground": { "role": "neutral", "displayName": "Тёплый фарфор", "canonical": "#f4f2ed", "dark": "#16203a", "tonalRamp": ["#1f1e1a", "#3a3830", "#565247", "#726d5e", "#8f8977", "#b0aa96", "#d2ccb9", "#f4f2ed"] },
+      "surface": { "role": "neutral", "displayName": "Молочная глазурь", "canonical": "#fffdf8", "dark": "#1d2848", "tonalRamp": ["#262419", "#413e2c", "#5d5940", "#7a7454", "#989169", "#b8b083", "#dad3a0", "#fffdf8"] },
+      "surface-sunken": { "role": "neutral", "displayName": "Затонувший фарфор", "canonical": "#eceae3", "dark": "#121b31", "tonalRamp": ["#1e1d17", "#383629", "#53503c", "#6f6b50", "#8c8766", "#aba57e", "#cbc4a8", "#eceae3"] },
+      "hairline": { "role": "neutral", "displayName": "Волосяная граница", "canonical": "#e3e0d7", "dark": "#2b375a", "tonalRamp": ["#1d1b14", "#363326", "#504c38", "#6b664b", "#87815f", "#a49d75", "#c3bba5", "#e3e0d7"] },
+      "hairline-strong": { "role": "neutral", "displayName": "Граница контрола", "canonical": "#cdc9bd", "dark": "#3d4b73", "tonalRamp": ["#1a1813", "#312e23", "#494533", "#625d44", "#7c7656", "#978f69", "#b2a991", "#cdc9bd"] },
+      "ink": { "role": "neutral", "displayName": "Графит", "canonical": "#23282e", "dark": "#eceadf", "tonalRamp": ["#0d0f12", "#161a1e", "#23282e", "#39414a", "#515b67", "#6b7784", "#97a1ac", "#c8cfd6"] },
+      "ink-2": { "role": "neutral", "displayName": "Приглушённый графит", "canonical": "#5c6670", "dark": "#a9b2c9", "contrast": "4.51:1 на фарфоре, ~5.7:1 на эмали", "tonalRamp": ["#14171a", "#22272c", "#31383f", "#424b53", "#5c6670", "#7e8894", "#a6afb9", "#ced4da"] },
+      "ink-3": { "role": "neutral", "displayName": "Тихий графит", "canonical": "#667079", "dark": "#96a2bd", "contrast": "4.51:1 — ось дней", "tonalRamp": ["#16191c", "#24292e", "#343a41", "#464e56", "#667079", "#88919b", "#aeb6bd", "#d3d8dd"] },
+      "on-ink": { "role": "neutral", "displayName": "Текст на графите", "canonical": "#fffdf8", "dark": "#16203a", "tonalRamp": ["#262419", "#413e2c", "#5d5940", "#7a7454", "#989169", "#b8b083", "#dad3a0", "#fffdf8"] },
+      "line-1": { "role": "secondary", "displayName": "Терракота", "canonical": "#a86a52", "dark": "#cf8e74", "tonalRamp": ["#2b1a13", "#452a20", "#5f3b2d", "#7a4c3c", "#a86a52", "#c08a75", "#d6ac9c", "#eed4c9"] },
+      "line-2": { "role": "primary", "displayName": "Пыльный синий", "canonical": "#4e6f92", "dark": "#85a9cf", "tonalRamp": ["#131c25", "#1f2d3b", "#2c4053", "#3a546d", "#4e6f92", "#7591b0", "#a2b6cb", "#d0dae4"] },
+      "line-3": { "role": "secondary", "displayName": "Охра", "canonical": "#a8894e", "dark": "#cfae74", "tonalRamp": ["#2b2213", "#453720", "#5f4c2d", "#7a623a", "#a8894e", "#c0a675", "#d6c4a0", "#eee2cb"] },
+      "line-4": { "role": "secondary", "displayName": "Шалфей", "canonical": "#5f8770", "dark": "#85b298", "tonalRamp": ["#17231c", "#24372c", "#324b3d", "#41604e", "#5f8770", "#85a794", "#aec7b9", "#d7e3dc"] },
+      "line-5": { "role": "secondary", "displayName": "Пыльная слива", "canonical": "#7d6285", "dark": "#a992b2", "tonalRamp": ["#1f1922", "#332836", "#47384b", "#5c4962", "#7d6285", "#9b86a1", "#bdaec0", "#ded7e0"] },
+      "accent": { "role": "primary", "displayName": "Акцент действия", "canonical": "#4e6f92", "dark": "#85a9cf", "tonalRamp": ["#131c25", "#1f2d3b", "#2c4053", "#3a546d", "#4e6f92", "#7591b0", "#a2b6cb", "#d0dae4"] },
+      "accent-text": { "role": "primary", "displayName": "Акцент в тексте", "canonical": "#3f5c7b", "dark": "#a8c4e0", "tonalRamp": ["#0f1720", "#192631", "#243645", "#31485e", "#3f5c7b", "#6b849f", "#9dafc3", "#ced8e2"] },
+      "accent-weak": { "role": "primary", "displayName": "Подложка акцента", "canonical": "rgba(78, 111, 146, 0.12)", "dark": "rgba(133, 169, 207, 0.18)" },
+      "alert": { "role": "tertiary", "displayName": "Обожжённая охра тревоги", "canonical": "#a8543c", "dark": "#d08a70", "tonalRamp": ["#2b140e", "#452118", "#5f2f21", "#7a3c2b", "#a8543c", "#c17d69", "#d8a798", "#eed5cc"] },
+      "alert-weak": { "role": "tertiary", "displayName": "Подложка тревоги", "canonical": "rgba(168, 84, 60, 0.12)", "dark": "rgba(208, 138, 112, 0.18)" },
+      "ok": { "role": "tertiary", "displayName": "Приглушённый мох", "canonical": "#4f7a5f", "dark": "#7fb392", "note": "проброшен только в --ui-success компонентов @nuxt/ui", "tonalRamp": ["#131f18", "#1f3226", "#2c4634", "#3a5b44", "#4f7a5f", "#7a9c86", "#a7c2b0", "#d4e0d9"] },
+      "selection": { "role": "primary", "displayName": "Выделение текста", "canonical": "rgba(78, 111, 146, 0.18)", "dark": "rgba(133, 169, 207, 0.28)" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Заголовок экрана: «Дейлик за 13 сентября», история, аналитика. Под 48rem — 1.5rem." },
+      "headline": { "displayName": "Headline", "purpose": "Заголовок входа и крупные числа аналитики." },
+      "title": { "displayName": "Title", "purpose": "Название линии работы (до 44ch) и словесный знак логотипа." },
+      "section": { "displayName": "Section", "purpose": "Рубрика раздела строчными: «В пути», «Новая ветка». Отличается весом и цветом, не кеглем." },
+      "body": { "displayName": "Body", "purpose": "Основной текст и записи по линиям, мера 62–68ch." },
+      "input": { "displayName": "Input", "purpose": "Поля записи и новой ветки — крупнее текста, потому что в них пишут." },
+      "meta": { "displayName": "Meta", "purpose": "Вчерашний апдейт, «4 дня в пути», строка видимости, текстовые действия." },
+      "micro": { "displayName": "Micro", "purpose": "День недели на оси, подписи нижних вкладок; легенда идёт 0.75rem." },
+      "numeric": { "displayName": "Numeric", "purpose": "Класс .num: табличные цифры для оси дней, счётчиков и «N дней в пути»." }
+    },
+    "fonts": [
+      { "family": "Golos Text", "source": "self-hosted woff2, /public/fonts", "weights": [400, 500, 600, 700], "subsets": ["cyrillic", "cyrillic-ext", "latin"], "display": "swap" }
+    ],
+    "shadows": [
+      { "name": "focus-ring-field", "value": "0 0 0 3px var(--accent-weak)", "purpose": "Кольцо фокуса поля и композитора. Не высота — состояние." },
+      { "name": "focus-ring-global", "value": "outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 999px", "purpose": "Общее кольцо :focus-visible для всего нажимаемого." },
+      { "name": "station-interchange", "value": "inset 0 0 0 3px var(--surface), inset 0 0 0 7px var(--alert)", "purpose": "Внутренние кольца станции «встал» — рисуют пересадку, не подсветку." }
+    ],
+    "motion": [
+      { "name": "ease", "value": "cubic-bezier(0.2, 0.7, 0.3, 1)", "purpose": "Единственная кривая системы." },
+      { "name": "t-state", "value": "120ms", "purpose": "Состояния контролов: фон, граница, цвет." },
+      { "name": "t-move", "value": "160ms", "purpose": "Заливка станции дня и протяжка ветки (scaleX из левого края)." },
+      { "name": "t-open", "value": "200ms", "purpose": "Раскрытие строки текста под линией." },
+      { "name": "reduced-motion", "value": "prefers-reduced-motion: reduce → 0.01ms", "purpose": "Движение глушится глобально; протяжка ветки не проигрывается, заливка остаётся." }
+    ],
+    "breakpoints": [
+      { "name": "tabs", "value": "60rem", "purpose": "Боковая колонка → липкая шапка плюс нижняя панель вкладок." },
+      { "name": "compact", "value": "48rem", "purpose": "Контролы растут до 3rem, отступы панелей сжимаются, заголовок 1.5rem." },
+      { "name": "narrow", "value": "30rem", "purpose": "Таблетки состояний уплотняются до 0.8125rem." }
+    ],
+    "measures": [
+      { "name": "content-max", "value": "64rem" },
+      { "name": "nav-w", "value": "14.5rem" },
+      { "name": "ctrl-h", "value": "2.75rem (3rem под 48rem)" },
+      { "name": "ctrl-h-sm", "value": "2.25rem (2.5rem под 48rem)" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Главная кнопка",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Отправка дейлика. Графит в покое, акцент на ховере.",
+      "html": "<button class=\"ds-btn ds-btn-primary\">Отправить</button>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; height: 2.75rem; padding: 0 1.5rem; border: 1px solid transparent; border-radius: 999px; font-family: 'Golos Text', system-ui, sans-serif; font-size: 0.9375rem; font-weight: 500; white-space: nowrap; cursor: pointer; transition: background-color 120ms cubic-bezier(0.2,0.7,0.3,1), border-color 120ms cubic-bezier(0.2,0.7,0.3,1), color 120ms cubic-bezier(0.2,0.7,0.3,1); } .ds-btn-primary { background: var(--ink, #23282e); color: var(--on-ink, #fffdf8); } .ds-btn-primary:hover { background: var(--accent, #4e6f92); } .ds-btn-primary:focus-visible { outline: 2px solid var(--accent, #4e6f92); outline-offset: 3px; } .ds-btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }"
+    },
+    {
+      "name": "Вторичная кнопка",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "«не работал», «заполнить» — обратимые действия шапки.",
+      "html": "<button class=\"ds-btn-secondary\">не работал</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; height: 2.75rem; padding: 0 1.5rem; background: var(--surface, #fffdf8); color: var(--ink, #23282e); border: 1px solid var(--hairline-strong, #cdc9bd); border-radius: 999px; font-family: 'Golos Text', system-ui, sans-serif; font-size: 0.9375rem; font-weight: 500; cursor: pointer; transition: background-color 120ms cubic-bezier(0.2,0.7,0.3,1), border-color 120ms cubic-bezier(0.2,0.7,0.3,1); } .ds-btn-secondary:hover { background: rgba(35,40,46,0.045); border-color: var(--ink-3, #667079); } .ds-btn-secondary:focus-visible { outline: 2px solid var(--accent, #4e6f92); outline-offset: 3px; }"
+    },
+    {
+      "name": "Поле ввода",
+      "kind": "input",
+      "refersTo": "field",
+      "description": "Запись по линии и любое текстовое поле кабинета.",
+      "html": "<input class=\"ds-field\" placeholder=\"что продвинулось?\" />",
+      "css": ".ds-field { width: 100%; min-height: 2.75rem; padding: 0.5rem 1rem; background: var(--surface, #fffdf8); color: var(--ink, #23282e); border: 1px solid var(--hairline-strong, #cdc9bd); border-radius: 12px; font-family: 'Golos Text', system-ui, sans-serif; font-size: 1rem; transition: border-color 120ms cubic-bezier(0.2,0.7,0.3,1), box-shadow 120ms cubic-bezier(0.2,0.7,0.3,1); } .ds-field::placeholder { color: var(--ink-3, #667079); } .ds-field:hover { border-color: var(--ink-3, #667079); } .ds-field:focus { outline: none; border-color: var(--accent, #4e6f92); box-shadow: 0 0 0 3px var(--accent-weak, rgba(78,111,146,0.12)); }"
+    },
+    {
+      "name": "Таблетка состояния",
+      "kind": "chip",
+      "refersTo": "pill-state",
+      "description": "Радиогруппа идёт / готово / встал / бросил. Активная берёт цвет ветки, «встал» — тревожный.",
+      "html": "<div class=\"ds-pills\" role=\"radiogroup\" style=\"--line:#a8894e\"><button class=\"ds-pill ds-pill-active\" role=\"radio\" aria-checked=\"true\"><span class=\"ds-pill-mark\"></span><span>идёт</span></button><button class=\"ds-pill\" role=\"radio\" aria-checked=\"false\"><span class=\"ds-pill-mark ds-pill-mark-done\"></span><span>готово</span></button><button class=\"ds-pill ds-pill-blocked\" role=\"radio\" aria-checked=\"false\"><span class=\"ds-pill-mark\"></span><span>встал</span></button></div>",
+      "css": ".ds-pills { display: flex; flex-wrap: wrap; gap: 0.5rem; } .ds-pill { display: inline-flex; align-items: center; gap: 0.5rem; height: 2.25rem; padding: 0 1rem; background: var(--surface, #fffdf8); color: var(--ink-2, #5c6670); border: 1px solid var(--hairline-strong, #cdc9bd); border-radius: 999px; font-family: 'Golos Text', system-ui, sans-serif; font-size: 0.875rem; cursor: pointer; transition: color 120ms cubic-bezier(0.2,0.7,0.3,1), border-color 120ms cubic-bezier(0.2,0.7,0.3,1), background-color 120ms cubic-bezier(0.2,0.7,0.3,1); } .ds-pill:hover { color: var(--ink, #23282e); border-color: var(--ink-3, #667079); } .ds-pill:focus-visible { outline: 2px solid var(--accent, #4e6f92); outline-offset: 3px; } .ds-pill-mark { width: 11px; height: 11px; border: 3px solid var(--ink-3, #667079); border-radius: 50%; } .ds-pill-mark-done { width: 4px; height: 14px; border: 0; border-radius: 999px; background: var(--ink-3, #667079); } .ds-pill-active { color: var(--ink, #23282e); border-color: var(--line); background: color-mix(in srgb, var(--line) 12%, var(--surface, #fffdf8)); } .ds-pill-active .ds-pill-mark { border-color: var(--line); }"
+    },
+    {
+      "name": "Панель линии",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "Молочная панель со скруглением 14px и волосяной границей; отмеченная линия подкрашена цветом ветки в 5%.",
+      "html": "<article class=\"ds-card\" style=\"--line:#4e6f92\"><span class=\"ds-card-badge\"></span><div><h3 class=\"ds-card-title\">перенос отчётности на новый шаблон</h3><p class=\"ds-card-meta\">4 дня в пути · вчера: выгрузка за прошлый год не сходится</p></div></article>",
+      "css": ".ds-card { display: flex; align-items: flex-start; gap: 0.75rem; padding: 1rem 1.5rem 0.75rem; background: color-mix(in srgb, var(--line) 5%, var(--surface, #fffdf8)); border: 1px solid var(--hairline, #e3e0d7); border-radius: 14px; font-family: 'Golos Text', system-ui, sans-serif; } .ds-card-badge { flex: none; width: 6px; height: 2.25rem; margin-top: 2px; background: var(--line); border-radius: 999px; } .ds-card-title { margin: 0; font-size: 1.0625rem; font-weight: 600; line-height: 1.3; color: var(--ink, #23282e); } .ds-card-meta { margin: 2px 0 0; font-size: 0.8125rem; color: var(--ink-2, #5c6670); }"
+    },
+    {
+      "name": "Маршрут дня",
+      "kind": "custom",
+      "refersTo": "station-today",
+      "description": "Сигнатурный компонент: ветка со станциями, справа — полая станция «сегодня» в мишени 2.75rem.",
+      "html": "<div class=\"ds-route\" style=\"--line:#a8894e\"><span class=\"ds-track\"></span><span class=\"ds-station\" style=\"left:12%\"></span><span class=\"ds-station\" style=\"left:40%\"></span><span class=\"ds-station ds-station-delayed\" style=\"left:68%\"></span><button class=\"ds-today\" style=\"left:92%\" aria-label=\"Отметить сегодня\"><span class=\"ds-today-mark\"></span></button></div>",
+      "css": ".ds-route { position: relative; height: 2.25rem; width: 100%; } .ds-track { position: absolute; top: 50%; left: 12%; width: 56%; height: 6px; background: var(--line); border-radius: 999px; transform: translateY(-50%); } .ds-station { position: absolute; top: 50%; width: 13px; height: 13px; background: var(--surface, #fffdf8); border: 3px solid var(--line); border-radius: 50%; transform: translate(-50%, -50%); } .ds-station-delayed { width: 17px; height: 17px; border-color: var(--alert, #a8543c); box-shadow: inset 0 0 0 3px var(--surface, #fffdf8), inset 0 0 0 7px var(--alert, #a8543c); } .ds-today { position: absolute; top: 50%; display: flex; align-items: center; justify-content: center; width: 2.75rem; height: 2.75rem; padding: 0; background: none; border: 0; border-radius: 50%; transform: translate(-50%, -50%); cursor: pointer; } .ds-today-mark { width: 19px; height: 19px; background: var(--surface, #fffdf8); border: 2px dashed var(--ink-3, #667079); border-radius: 50%; transition: border-color 120ms cubic-bezier(0.2,0.7,0.3,1), background-color 160ms cubic-bezier(0.2,0.7,0.3,1); } .ds-today:hover .ds-today-mark { border-color: var(--line); background: rgba(35,40,46,0.08); } .ds-today:focus-visible { outline: 2px solid var(--accent, #4e6f92); outline-offset: 3px; }"
+    },
+    {
+      "name": "Пункт навигации",
+      "kind": "nav",
+      "refersTo": "nav-link",
+      "description": "Таблетка боковой колонки: приглушённый графит в покое, акцент на подложке в активном состоянии.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-link ds-nav-link-active\" href=\"#\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 20h9\"/><path d=\"M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z\"/></svg>Дейлик</a><a class=\"ds-nav-link\" href=\"#\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m12 2 9 5-9 5-9-5 9-5Z\"/><path d=\"m3 12 9 5 9-5\"/><path d=\"m3 17 9 5 9-5\"/></svg>История</a></nav>",
+      "css": ".ds-nav { display: flex; flex-direction: column; gap: 2px; min-width: 12rem; font-family: 'Golos Text', system-ui, sans-serif; } .ds-nav-link { display: flex; align-items: center; gap: 0.5rem; height: 2.75rem; padding: 0 0.5rem; color: var(--ink-2, #5c6670); border-radius: 999px; font-size: 0.9375rem; text-decoration: none; transition: color 120ms cubic-bezier(0.2,0.7,0.3,1), background-color 120ms cubic-bezier(0.2,0.7,0.3,1); } .ds-nav-link svg { color: var(--ink-3, #667079); } .ds-nav-link:hover { color: var(--ink, #23282e); background: rgba(35,40,46,0.045); } .ds-nav-link-active { color: var(--accent-text, #3f5c7b); background: var(--accent-weak, rgba(78,111,146,0.12)); } .ds-nav-link-active svg { color: var(--accent-text, #3f5c7b); } .ds-nav-link:focus-visible { outline: 2px solid var(--accent, #4e6f92); outline-offset: 3px; }"
+    },
+    {
+      "name": "Легенда схемы",
+      "kind": "custom",
+      "refersTo": "station-today",
+      "description": "Словарь станций: идёт / готово / встал / бросил / сегодня — та же геометрия, что в маршруте, нейтральным цветом.",
+      "html": "<dl class=\"ds-legend\"><div><dt class=\"ds-lm\"></dt><dd>идёт</dd></div><div><dt class=\"ds-lm ds-lm-terminus\"></dt><dd>готово</dd></div><div><dt class=\"ds-lm ds-lm-delayed\"></dt><dd>встал</dd></div><div><dt class=\"ds-lm ds-lm-today\"></dt><dd>сегодня</dd></div></dl>",
+      "css": ".ds-legend { display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; margin: 0; color: var(--ink-3, #667079); font-family: 'Golos Text', system-ui, sans-serif; font-size: 0.75rem; } .ds-legend > div { display: flex; align-items: center; gap: 0.5rem; } .ds-legend dd { margin: 0; } .ds-lm { flex: none; width: 12px; height: 12px; background: var(--surface, #fffdf8); border: 3px solid var(--ink-3, #667079); border-radius: 50%; } .ds-lm-terminus { width: 4px; height: 14px; border: 0; border-radius: 999px; background: var(--ink-3, #667079); } .ds-lm-delayed { border-color: var(--alert, #a8543c); box-shadow: inset 0 0 0 2px var(--surface, #fffdf8), inset 0 0 0 5px var(--alert, #a8543c); } .ds-lm-today { border-width: 2px; border-style: dashed; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Схема метро на тёплом фарфоре",
+    "overview": "Кабинет выглядит как транспортная схема, напечатанная на молочной глазури. Линия работы — это ветка, день — станция на ней, а заполнить дейлик значит проехать одну станцию: тап по сегодняшнему кружку. Из этого следует вся геометрия системы: толстый штрих ветки со скруглёнными концами, кружок станции в цветном кольце, поперечная планка конечной, обрыв ветки вниз на съезде. Схема читается за секунду, потому что на ней нет ничего, кроме линий, станций и подписей.\n\nПлотность средняя и спокойная: одна колонка не шире 64rem, панели молочной глазури со скруглением 14px на тёплом фоне, разделение — волосяные границы, а не тени. Насыщенность веток срезана намеренно: пять пыльных красок работают как маркировка маршрута, а не как акцент. Ярких эмалей в системе нет, и это зафиксировано пользователем.\n\nТёмная тема не производная и не «инверсия»: это та же схема, отпечатанная на ночной эмали #16203a, с собственным набором осветлённых веток. Обе темы равноправны и обе в приёмке. Движение служебное: 120/160/200ms на одной кривой, ничего не подпрыгивает и не масштабируется, при prefers-reduced-motion движение глушится без потери функций.",
+    "keyCharacteristics": [
+      "Транспортная схема как буквальная модель интерфейса, а не как метафора в оформлении",
+      "Тёплый фарфор #f4f2ed и ночная эмаль #16203a — две равноправные темы",
+      "Пять пыльных цветов веток, назначаемых линии работы, а не статусу",
+      "Ни одного прямого угла в контролах: таблетка или кружок",
+      "Плоскость: глубина строится тоном и волосяной границей, тени не используются",
+      "Одна гарнитура — самохостовый Golos Text, начертания 400–700"
+    ],
+    "rules": [
+      { "name": "Правило пяти веток", "body": "Цвет принадлежит линии работы, а не статусу, и назначается по chain_id. Шестого оттенка в системе не появляется: новая линия получает один из пяти.", "section": "colors" },
+      { "name": "Правило одной тревоги", "body": "Тревожный цвет зарезервирован под состояние «встал». Ошибки сохранения — единственное исключение. Ни одного декоративного применения.", "section": "colors" },
+      { "name": "Правило подписи", "body": "Статус никогда не кодируется одним цветом: у каждого состояния есть собственная геометрия (кружок, планка, кольцо, обрыв) и словесная подпись.", "section": "colors" },
+      { "name": "Правило одной гарнитуры", "body": "Golos Text — единственное семейство. Второго шрифта, моноширинного слоя и системного display-начертания в системе нет.", "section": "typography" },
+      { "name": "Правило табличных цифр", "body": "Всё, что стоит в колонке или меняется на месте — числа оси дней, счётчики, «N дней в пути» — набирается классом .num, чтобы цифры не дёргали разметку.", "section": "typography" },
+      { "name": "Правило строчной рубрики", "body": "Рубрики разделов набираются строчными в обычном кегле. Капса, разрядки и надзаголовков в системе нет.", "section": "typography" },
+      { "name": "Правило растущего пальца", "body": "На узком экране контролы не уменьшаются, а увеличиваются: 2.75rem → 3rem. Уплотняются только отступы и подписи.", "section": "layout" },
+      { "name": "Правило плоскости", "body": "Поверхность поднимают тоном и границей. Если возник соблазн поставить тень — нужен другой тон фона или другая граница.", "section": "elevation" },
+      { "name": "Правило круглого тапа", "body": "Мишень станции — круг 2.75rem, даже когда видимая метка 13–19px. Видимая геометрия уменьшается, зона попадания — нет.", "section": "shapes" }
+    ],
+    "dos": [
+      "Do назначать цвет линии работы, а не статусу, и брать его из пяти веток line-1…line-5.",
+      "Do держать alert за состоянием «встал» и сообщением о неудачном сохранении.",
+      "Do давать каждому состоянию собственную геометрию и подпись, чтобы оно читалось без цвета.",
+      "Do строить глубину тоном и волосяной границей 1px.",
+      "Do скруглять всё нажимаемое в таблетку (999px) или круг, панели — 14px, поля — 12px.",
+      "Do держать движение в 120ms (состояния контролов) / 160ms (заливка станции и протяжка ветки) / 200ms (раскрытие строки) на кривой cubic-bezier(0.2, 0.7, 0.3, 1).",
+      "Do увеличивать контролы до 3rem под 48rem и уводить навигацию в нижнюю панель под 60rem.",
+      "Do набирать цифры в колонках классом .num.",
+      "Do поддерживать обе темы одним и тем же токеном: новые значения объявляются и в светлой, и в тёмной ветке main.css."
+    ],
+    "donts": [
+      "Don't вводить шестой цвет ветки или поднимать насыщенность существующих: яркая эмаль отклонена пользователем прямо.",
+      "Don't ставить прямые углы на нажимаемых элементах.",
+      "Don't изображать высоту тенями — тени в системе только для фокуса и внутренних колец станции.",
+      "Don't кодировать статус одним цветом.",
+      "Don't набирать надзаголовки, капс и разрядку: рубрика — строчная, весом 600.",
+      "Don't масштабировать и подбрасывать элементы при взаимодействии; единственное изменение размера в системе — протяжка ветки по оси X.",
+      "Don't подключать второе семейство шрифтов и системные display-начертания.",
+      "Don't ставить текстовые глифы («✓», «→», «•») вместо векторной иконки или геометрии станции.",
+      "Don't добавлять на экран пустое поле «на всякий случай»: строка текста раскрывается там, где есть что сказать."
+    ]
+  }
+}
