@@ -5,7 +5,7 @@ import type { Schema } from '~/utils/shemas/AuthSchema'
 import { authSchema } from '~/utils/shemas/AuthSchema'
 
 const toast = useToast()
-// const router = useRouter()
+const router = useRouter()
 const loginStore = useLoginStore()
 
 const fields: AuthFormField[] = [{
@@ -23,11 +23,14 @@ const fields: AuthFormField[] = [{
 }]
 
 // TODO убрать такую типизацию
-const onSubmit = (payload: FormSubmitEvent<Schema>) => {
-  // router.push('/')
-  loginStore.loginUser({ email: payload.data.email, password: payload.data.password })
-  console.log('payload', payload)
-  toast.add({ title: 'Авторизация', description: 'Вход успешно выполнен!' })
+const onSubmit = async (payload: FormSubmitEvent<Schema>) => {
+  try {
+    await loginStore.loginUser({ email: payload.data.email, password: payload.data.password })
+    toast.add({ title: 'Авторизация', description: 'Вход успешно выполнен!' })
+    router.push('/')
+  } catch {
+    toast.add({ title: 'Авторизация', description: 'Неправильный логин или пароль!' })
+  }
 }
 </script>
 

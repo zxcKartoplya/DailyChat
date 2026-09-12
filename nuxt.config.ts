@@ -14,7 +14,7 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      apiUrl: 'http://localhost:8000'
+      apiUrl: process.env.API_URL
     }
   },
 
@@ -23,6 +23,17 @@ export default defineNuxtConfig({
   },
 
   compatibilityDate: '2025-01-15',
+
+  vite: {
+    optimizeDeps: {
+      include: [
+        '@internationalized/date',
+        '@vue/devtools-core',
+        '@vue/devtools-kit',
+        'zod'
+      ]
+    }
+  },
 
   eslint: {
     config: {
