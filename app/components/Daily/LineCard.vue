@@ -52,32 +52,36 @@ watch(() => marked, (value) => {
     :class="{ 'line--marked': marked }"
     :style="{ '--line': color }"
   >
-    <div class="line__head">
-      <span
-        class="line__badge"
-        aria-hidden="true"
-      />
+    <div class="line__band">
+      <DailyDayGrid :days="days.length" />
 
-      <div class="line__heading">
-        <h3 class="line__title">
-          {{ chain.title }}
-        </h3>
-        <p class="line__meta">
-          <span class="num line__age">{{ pluralDays(chain.daysOpen) }} в пути</span>
-          <span class="line__last">{{ relativeDayLabel(chain.lastDate) }}: {{ chain.lastText }}</span>
-        </p>
+      <div class="line__head">
+        <span
+          class="line__badge"
+          aria-hidden="true"
+        />
+
+        <div class="line__heading">
+          <h3 class="line__title">
+            {{ chain.title }}
+          </h3>
+          <p class="line__meta">
+            <span class="num line__age">{{ pluralDays(chain.daysOpen) }} в пути</span>
+            <span class="line__last">{{ relativeDayLabel(chain.lastDate) }}: {{ chain.lastText }}</span>
+          </p>
+        </div>
       </div>
-    </div>
 
-    <DailyRoute
-      :days="days"
-      :history="chain.history"
-      :color="color"
-      :today-status="marked ? status : null"
-      :interactive="editable"
-      :title="chain.title"
-      @toggle-today="emits('toggleMark')"
-    />
+      <DailyRoute
+        :days="days"
+        :history="chain.history"
+        :color="color"
+        :today-status="marked ? status : null"
+        :interactive="editable"
+        :title="chain.title"
+        @toggle-today="emits('toggleMark')"
+      />
+    </div>
 
     <div
       v-if="editable && marked"
@@ -143,7 +147,16 @@ watch(() => marked, (value) => {
   background: color-mix(in srgb, var(--line) 5%, transparent);
 }
 
+.line__band {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding-bottom: var(--s-1);
+}
+
 .line__head {
+  position: relative;
   display: flex;
   align-items: flex-start;
   gap: var(--s-3);

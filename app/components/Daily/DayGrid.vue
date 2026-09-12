@@ -22,7 +22,7 @@ const { days } = defineProps<Props>()
 <style scoped>
 .day-grid {
   position: absolute;
-  inset: 0 var(--s-5);
+  inset: 0;
   display: grid;
   grid-template-columns: repeat(var(--day-columns), 1fr);
   pointer-events: none;
@@ -33,11 +33,5 @@ const { days } = defineProps<Props>()
   width: 1px;
   height: 100%;
   background: var(--hairline);
-}
-
-@media (max-width: 48rem) {
-  .day-grid {
-    inset: 0 var(--s-4);
-  }
 }
 </style>

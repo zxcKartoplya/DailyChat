@@ -5,12 +5,12 @@
       <dd>идёт</dd>
     </div>
     <div class="legend__item">
-      <dt class="legend__mark legend__mark--delayed" />
-      <dd>встал</dd>
-    </div>
-    <div class="legend__item">
       <dt class="legend__mark legend__mark--terminus" />
       <dd>готово</dd>
+    </div>
+    <div class="legend__item">
+      <dt class="legend__mark legend__mark--delayed" />
+      <dd>встал</dd>
     </div>
     <div class="legend__item">
       <dt class="legend__mark legend__mark--cut" />
@@ -18,7 +18,7 @@
     </div>
     <div class="legend__item">
       <dt class="legend__mark legend__mark--today" />
-      <dd>сегодня, не отмечено</dd>
+      <dd>сегодня</dd>
     </div>
   </dl>
 </template>

@@ -130,8 +130,6 @@ onMounted(() => {
           </div>
 
           <div class="daily__field panel">
-            <DailyDayGrid :days="days.length" />
-
             <DailyLineCard
               v-for="chain in store.openChains"
               :key="chain.chainId"

@@ -45,7 +45,7 @@ const today = todayIso()
 }
 
 .axis__day--weekend {
-  opacity: 0.6;
+  color: var(--ink-3);
 }
 
 .axis__day--today {

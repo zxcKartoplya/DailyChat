@@ -34,7 +34,7 @@ const firstDay = computed(() => days[0] ?? '')
       </button>
       <button
         type="button"
-        class="btn btn--ghost btn--sm"
+        class="btn btn--secondary btn--sm"
         :disabled="busy"
         @click="emits('markOff', days)"
       >
