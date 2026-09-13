@@ -130,6 +130,7 @@ export const useApi = () => {
 
         switch (response.status) {
           case ApiHttpCode.UNAUTHORIZED:
+            await dropSession()
             throw new UnauthorizedError()
           case ApiHttpCode.VALIDATION_ERROR:
             throw new ValidationError(
@@ -165,6 +166,16 @@ export const useApi = () => {
     const { token } = useAuth()
 
     return token.value ? { Authorization: `Bearer ${token.value}` } : {}
+  }
+
+  const dropSession = async () => {
+    const { logout, token } = useAuth()
+
+    if (!token.value) return
+
+    logout()
+
+    await navigateTo('/login')
   }
 
   const buildUrl = (path: string): string => {
