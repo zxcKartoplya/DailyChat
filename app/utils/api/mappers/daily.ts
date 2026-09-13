@@ -7,6 +7,7 @@ import type {
   EntryItem,
   EntryStatus,
   ItemStatus,
+  OffReasonOption,
   OpenChain
 } from '~/types/daily'
 
@@ -23,9 +24,17 @@ export const mapEntry = (dto: Schemas['DailyEntry']): DailyEntry => ({
   id: dto.id,
   date: dto.date,
   dayType: dto.day_type as DayType,
+  offReason: dto.off_reason ?? null,
+  offReasonNote: dto.off_reason_note ?? null,
   status: dto.status as EntryStatus,
   submittedAt: dto.submitted_at ?? null,
   items: (dto.items ?? []).map(mapEntryItem)
+})
+
+export const mapOffReasonOption = (dto: Schemas['OffReasonOption']): OffReasonOption => ({
+  code: dto.code,
+  label: dto.label,
+  requiresNote: dto.requires_note
 })
 
 const mapChainPoint = (dto: Schemas['ChainPoint']): ChainPoint => ({

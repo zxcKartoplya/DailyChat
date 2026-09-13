@@ -1,7 +1,7 @@
 import { useApi } from '~/composables/api/useApi'
 import type { Schemas } from '~/types/schemas'
-import type { DailyDay, DailyEntry, DayType, DraftItem } from '~/types/daily'
-import { mapDay, mapEntry } from '~/utils/api/mappers/daily'
+import type { DailyDay, DailyEntry, DayWrite, OffReasonOption } from '~/types/daily'
+import { mapDay, mapEntry, mapOffReasonOption } from '~/utils/api/mappers/daily'
 
 const dayPath = (date: string, suffix = '') => `/api/employee/daily/${date}${suffix}`
 
@@ -12,10 +12,12 @@ export const useDailyApi = () => {
     return mapDay(await useGet<Schemas['DayView']>(dayPath(date)))
   }
 
-  const saveDay = async (date: string, dayType: DayType, items: DraftItem[]): Promise<DailyEntry> => {
+  const saveDay = async (date: string, day: DayWrite): Promise<DailyEntry> => {
     const payload: Schemas['DailyEntryWrite'] = {
-      day_type: dayType,
-      items: items.map((item, position) => ({
+      day_type: day.dayType,
+      off_reason: day.offReason,
+      off_reason_note: day.offReasonNote,
+      items: day.items.map((item, position) => ({
         chain_id: item.chainId,
         text: item.text,
         status: item.status,
@@ -47,5 +49,11 @@ export const useDailyApi = () => {
     return entries.map(mapEntry)
   }
 
-  return { getDay, saveDay, submitEntry, markDaysOff, getHistory }
+  const getOffReasons = async (): Promise<OffReasonOption[]> => {
+    const options = await useGet<Schemas['OffReasonOption'][]>('/api/dictionaries/off-reasons')
+
+    return options.map(mapOffReasonOption)
+  }
+
+  return { getDay, saveDay, submitEntry, markDaysOff, getHistory, getOffReasons }
 }

@@ -1,3 +1,5 @@
+import type { Schemas } from '~/types/schemas'
+
 export enum ItemStatus {
   IN_PROGRESS = 'in_progress',
   DONE = 'done',
@@ -15,6 +17,16 @@ export enum EntryStatus {
   SUBMITTED = 'submitted'
 }
 
+export type OffReason = Schemas['OffReason']
+
+export type OffReasonOption = {
+  code: OffReason
+  label: string
+  requiresNote: boolean
+}
+
+export const OFF_REASON_NOTE_MAX = 200
+
 export type EntryItem = {
   id: number
   chainId: string | null
@@ -28,9 +40,18 @@ export type DailyEntry = {
   id: number
   date: string
   dayType: DayType
+  offReason: OffReason | null
+  offReasonNote: string | null
   status: EntryStatus
   submittedAt: string | null
   items: EntryItem[]
+}
+
+export type DayWrite = {
+  dayType: DayType
+  offReason: OffReason | null
+  offReasonNote: string | null
+  items: DraftItem[]
 }
 
 export type OpenChain = {
