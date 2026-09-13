@@ -1,7 +1,10 @@
 import { useDailyApi } from '~/composables/api/useDailyApi'
-import type { DailyDay, DailyEntry, DraftItem } from '~/types/daily'
-import { DayType, EntryStatus, ItemStatus } from '~/types/daily'
+import { useOffReasonsStore } from '~/stores/offReasons'
+import type { DailyDay, DailyEntry, DayWrite, DraftItem, OffReason } from '~/types/daily'
+import { DayType, EntryStatus, ItemStatus, OFF_REASON_NOTE_MAX } from '~/types/daily'
 import { todayIso } from '~/utils/date'
+
+type OffPayload = Pick<DayWrite, 'offReason' | 'offReasonNote'>
 
 type ChainDraft = {
   marked: boolean
@@ -15,6 +18,7 @@ const draftStorageKey = (date: string) => `daily-draft:${date}`
 
 export const useDailyStore = defineStore('daily', () => {
   const api = useDailyApi()
+  const offReasons = useOffReasonsStore()
 
   const date = ref<string>(todayIso())
   const day = ref<DailyDay | null>(null)
@@ -26,6 +30,8 @@ export const useDailyStore = defineStore('daily', () => {
   const savedAt = ref<string | null>(null)
   const submittedAt = ref<string | null>(null)
   const dayType = ref<DayType>(DayType.WORK)
+  const offReason = ref<OffReason | null>(null)
+  const offReasonNote = ref('')
 
   let saveTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -70,6 +76,24 @@ export const useDailyStore = defineStore('daily', () => {
     return [...fromChains, ...fromNew]
   })
 
+  const offPayload = computed<OffPayload>(() => {
+    if (!isDayOff.value || !offReason.value) return { offReason: null, offReasonNote: null }
+
+    const note = offReasonNote.value.trim()
+    const requiresNote = offReasons.find(offReason.value)?.requiresNote ?? note.length > 0
+
+    if (!requiresNote) return { offReason: offReason.value, offReasonNote: null }
+    if (!note || note.length > OFF_REASON_NOTE_MAX) return { offReason: null, offReasonNote: null }
+
+    return { offReason: offReason.value, offReasonNote: note }
+  })
+
+  const dayWrite = (): DayWrite => ({
+    dayType: dayType.value,
+    ...offPayload.value,
+    items: items.value
+  })
+
   const canSubmit = computed(() => isDayOff.value || items.value.length > 0)
 
   const readLocalDraft = () => {
@@ -84,7 +108,7 @@ export const useDailyStore = defineStore('daily', () => {
         chainDrafts?: Record<string, ChainDraft>
         newItems?: DraftItem[]
         dayType?: DayType
-      }
+      } & Partial<OffPayload>
 
       if (parsed.chainDrafts) chainDrafts.value = parsed.chainDrafts
 
@@ -92,6 +116,11 @@ export const useDailyStore = defineStore('daily', () => {
 
       if (restored.length) newItems.value = restored
       if (parsed.dayType) dayType.value = parsed.dayType
+
+      if (parsed.offReason !== undefined) {
+        offReason.value = parsed.offReason
+        offReasonNote.value = parsed.offReasonNote ?? ''
+      }
     } catch {
       localStorage.removeItem(draftStorageKey(date.value))
     }
@@ -104,7 +133,8 @@ export const useDailyStore = defineStore('daily', () => {
       localStorage.setItem(draftStorageKey(date.value), JSON.stringify({
         chainDrafts: chainDrafts.value,
         newItems: newItems.value,
-        dayType: dayType.value
+        dayType: dayType.value,
+        ...offPayload.value
       }))
     } catch {
       saveFailed.value = true
@@ -123,6 +153,8 @@ export const useDailyStore = defineStore('daily', () => {
       const result = await api.getDay(target)
       day.value = result
       dayType.value = result.entry?.dayType ?? DayType.WORK
+      offReason.value = result.entry?.offReason ?? null
+      offReasonNote.value = result.entry?.offReasonNote ?? ''
       submittedAt.value = result.entry?.status === EntryStatus.SUBMITTED
         ? result.entry.submittedAt
         : null
@@ -163,13 +195,21 @@ export const useDailyStore = defineStore('daily', () => {
     saveFailed.value = false
 
     try {
-      applyEntry(await api.saveDay(date.value, dayType.value, items.value))
+      applyEntry(await api.saveDay(date.value, dayWrite()))
       savedAt.value = new Date().toISOString()
     } catch {
       saveFailed.value = true
     } finally {
       saving.value = false
     }
+  }
+
+  const saveNow = () => {
+    writeLocalDraft()
+
+    if (saveTimer) clearTimeout(saveTimer)
+
+    return persist()
   }
 
   const scheduleSave = () => {
@@ -207,22 +247,26 @@ export const useDailyStore = defineStore('daily', () => {
     scheduleSave()
   }
 
-  const setDayType = async (value: DayType) => {
-    dayType.value = value
-    writeLocalDraft()
+  const setDayOff = (reason: OffReason | null) => {
+    if (reason !== offReason.value) offReasonNote.value = ''
 
-    if (!isEditable.value) return
+    dayType.value = DayType.OFF
+    offReason.value = reason
 
-    saving.value = true
+    return saveNow()
+  }
 
-    try {
-      applyEntry(await api.saveDay(date.value, value, items.value))
-      savedAt.value = new Date().toISOString()
-    } catch {
-      saveFailed.value = true
-    } finally {
-      saving.value = false
-    }
+  const setWorkDay = () => {
+    dayType.value = DayType.WORK
+    offReason.value = null
+    offReasonNote.value = ''
+
+    return saveNow()
+  }
+
+  const setOffReasonNote = (text: string) => {
+    offReasonNote.value = text
+    scheduleSave()
   }
 
   const markDaysOff = async (dates: string[]) => {
@@ -252,7 +296,7 @@ export const useDailyStore = defineStore('daily', () => {
     saveFailed.value = false
 
     try {
-      await api.saveDay(date.value, dayType.value, items.value)
+      await api.saveDay(date.value, dayWrite())
       applyEntry(await api.submitEntry(date.value))
       savedAt.value = submittedAt.value
     } catch {
@@ -274,6 +318,8 @@ export const useDailyStore = defineStore('daily', () => {
     savedAt,
     submittedAt,
     dayType,
+    offReason,
+    offReasonNote,
     newItems,
     openChains,
     missingDays,
@@ -290,7 +336,9 @@ export const useDailyStore = defineStore('daily', () => {
     setChainStatus,
     toggleChainMark,
     setNewItems,
-    setDayType,
+    setDayOff,
+    setWorkDay,
+    setOffReasonNote,
     markDaysOff,
     submit,
     retrySave
