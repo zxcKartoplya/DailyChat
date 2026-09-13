@@ -75,3 +75,22 @@ export const daysBetween = (fromIso: string, toIso: string): number => {
 export const lastDays = (count: number, endIso = todayIso()): string[] => {
   return Array.from({ length: count }, (_, index) => shiftDays(endIso, index - count + 1))
 }
+
+export const daysRange = (fromIso: string, toIso: string): string[] => {
+  const count = daysBetween(fromIso, toIso) + 1
+
+  return Array.from({ length: Math.max(count, 0) }, (_, index) => shiftDays(fromIso, index))
+}
+
+export const formatDateRange = (fromIso: string, toIso: string): string => {
+  if (fromIso === toIso) return formatLongDate(fromIso)
+
+  const from = fromIsoDate(fromIso)
+  const to = fromIsoDate(toIso)
+
+  if (from.getMonth() === to.getMonth() && from.getFullYear() === to.getFullYear()) {
+    return `${from.getDate()}–${formatLongDate(toIso)}`
+  }
+
+  return `${formatLongDate(fromIso)} – ${formatLongDate(toIso)}`
+}

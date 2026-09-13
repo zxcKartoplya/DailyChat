@@ -37,7 +37,7 @@ export const mapOffReasonOption = (dto: Schemas['OffReasonOption']): OffReasonOp
   requiresNote: dto.requires_note
 })
 
-const mapChainPoint = (dto: Schemas['ChainPoint']): ChainPoint => ({
+export const mapChainPoint = (dto: Schemas['ChainPoint']): ChainPoint => ({
   date: dto.date,
   status: dto.status as ItemStatus
 })
