@@ -1,13 +1,14 @@
 <script lang="ts" setup>
 import { useDailyStore } from '~/stores/daily'
+import { useOffReasonsStore } from '~/stores/offReasons'
 import type { DraftItem } from '~/types/daily'
-import { DayType } from '~/types/daily'
 import { formatLongDate, lastDays, todayIso } from '~/utils/date'
 import { plural } from '~/utils/plural'
 
 definePageMeta({ layout: 'auth' })
 
 const store = useDailyStore()
+const offReasons = useOffReasonsStore()
 const toast = useToast()
 
 const days = computed(() => lastDays(7, store.date))
@@ -28,6 +29,11 @@ const newItemsModel = computed<DraftItem[]>({
   set: value => store.setNewItems(value)
 })
 
+const offReasonNoteModel = computed<string>({
+  get: () => store.offReasonNote,
+  set: value => store.setOffReasonNote(value)
+})
+
 const onSubmit = async () => {
   try {
     await store.submit()
@@ -41,10 +47,9 @@ const onSubmit = async () => {
   }
 }
 
-const onMarkOff = () => store.setDayType(store.isDayOff ? DayType.WORK : DayType.OFF)
-
 onMounted(() => {
   void store.load(todayIso())
+  void offReasons.load()
 })
 </script>
 
@@ -88,23 +93,37 @@ onMounted(() => {
         </div>
 
         <button
+          v-if="store.isDayOff"
           type="button"
-          class="btn btn--secondary daily__off"
-          :class="{ 'daily__off--on': store.isDayOff }"
-          :aria-pressed="store.isDayOff"
+          class="btn btn--secondary daily__off daily__off--on"
+          aria-pressed="true"
           :disabled="!store.isEditable"
-          @click="onMarkOff"
+          @click="store.setWorkDay()"
         >
-          {{ store.isDayOff ? 'вернуть рабочий день' : 'не работал' }}
+          вернуть рабочий день
         </button>
+        <DailyOffReasonMenu
+          v-else
+          :disabled="!store.isEditable"
+          @select="store.setDayOff($event)"
+        >
+          <button
+            type="button"
+            class="btn btn--secondary daily__off"
+            :disabled="!store.isEditable"
+          >
+            не работал
+          </button>
+        </DailyOffReasonMenu>
       </header>
 
-      <p
+      <DailyOffDay
         v-if="store.isDayOff"
-        class="daily__off-state panel"
-      >
-        День отмечен нерабочим. Пунктов в нём нет, линии останутся открытыми и придут завтра.
-      </p>
+        v-model:note="offReasonNoteModel"
+        :reason="store.offReason"
+        :editable="store.isEditable"
+        @select="store.setDayOff($event)"
+      />
 
       <template v-else>
         <section
@@ -299,12 +318,6 @@ onMounted(() => {
   color: var(--ink);
   background: var(--surface-active);
   border-color: var(--ink-3);
-}
-
-.daily__off-state {
-  padding: var(--s-4) var(--s-5);
-  color: var(--ink-2);
-  max-width: 62ch;
 }
 
 .daily__section {
