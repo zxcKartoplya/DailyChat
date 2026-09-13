@@ -2,6 +2,8 @@
 import type { ChainPoint } from '~/types/daily'
 import { ItemStatus } from '~/types/daily'
 import { formatLongDate } from '~/utils/date'
+import type { RouteLevel, RoutePiece } from '~/utils/routeGeometry'
+import { buildRouteGeometry } from '~/utils/routeGeometry'
 
 type Props = {
   days: string[]
@@ -25,59 +27,51 @@ const emits = defineEmits<{
   toggleToday: []
 }>()
 
+const HEIGHT_REM = 2.25
+const AMPLITUDE_REM = 0.5
+
 const cellWidth = computed(() => 100 / days.length)
-const center = (index: number) => (index + 0.5) * cellWidth.value
+const center = (x: number) => (x + 0.5) * cellWidth.value
+const levelY = (level: RouteLevel) => 50 - level * (AMPLITUDE_REM / HEIGHT_REM) * 100
 
 const todayIndex = computed(() => days.length - 1)
 
+const geometry = computed(() => buildRouteGeometry({
+  days,
+  history,
+  lastDay: interactive || todayStatus ? todayStatus : undefined
+}))
+
 const stations = computed(() => {
-  return history
-    .filter(point => days.includes(point.date))
-    .map(point => ({
-      date: point.date,
-      status: point.status,
-      index: days.indexOf(point.date)
-    }))
+  if (!interactive) return geometry.value.stations
+
+  return geometry.value.stations.filter(station => station.x !== todayIndex.value)
 })
 
-const startsBefore = computed(() => {
-  const first = days[0]
-
-  return Boolean(first && history.some(point => point.date < first))
-})
-
-const startIndex = computed(() => {
-  if (startsBefore.value) return -0.5
-
-  return stations.value[0]?.index ?? todayIndex.value
-})
-
-const lastPastIndex = computed(() => stations.value.at(-1)?.index ?? null)
-
-const trackStart = computed(() => (startsBefore.value ? 0 : center(startIndex.value)))
-
-const trackEnd = computed(() => {
-  if (lastPastIndex.value !== null) return center(lastPastIndex.value)
-
-  return trackStart.value
-})
-
-const hasTrack = computed(() => trackEnd.value > trackStart.value || startsBefore.value)
-
-const extension = computed(() => {
+const growFrom = computed(() => {
   if (!todayStatus) return null
 
-  const from = lastPastIndex.value === null ? trackStart.value : center(lastPastIndex.value)
-  const to = center(todayIndex.value)
+  const previous = geometry.value.stations.filter(station => station.x < todayIndex.value).at(-1)
 
-  if (to <= from) return null
-
-  return { left: from, width: to - from }
+  return previous?.x ?? -0.5
 })
 
-const isClosed = computed(() => {
-  return todayStatus === ItemStatus.DONE || todayStatus === ItemStatus.DROPPED
+const isGrowing = (piece: RoutePiece) => growFrom.value !== null && piece.from.x >= growFrom.value
+
+const settledPieces = computed(() => geometry.value.pieces.filter(piece => !isGrowing(piece)))
+const growingPieces = computed(() => geometry.value.pieces.filter(isGrowing))
+
+const pieceKey = (piece: RoutePiece) => `${piece.from.x}:${piece.from.level}:${piece.to.x}:${piece.to.level}`
+
+const pieceLine = (piece: RoutePiece) => ({
+  x1: `${center(piece.from.x)}%`,
+  y1: `${levelY(piece.from.level)}%`,
+  x2: `${center(piece.to.x)}%`,
+  y2: `${levelY(piece.to.level)}%`,
+  class: ['route__track', { 'route__track--dashed': piece.stroke === 'dashed' }]
 })
+
+const markShift = computed(() => `0 ${-geometry.value.endLevel * AMPLITUDE_REM}rem`)
 
 const stationModifier = (status: ItemStatus) => {
   if (status === ItemStatus.BLOCKED) return 'route__station--delayed'
@@ -105,27 +99,38 @@ const stationTitle = (date: string) => formatLongDate(date)
 <template>
   <div
     class="route"
-    :style="{ '--line': color }"
-    :class="{ 'route--closed': isClosed }"
+    :style="{ '--line': color, 'height': `${HEIGHT_REM}rem` }"
+    :class="{ 'route--closed': geometry.closed }"
   >
-    <span
-      v-if="hasTrack"
-      class="route__track"
-      :style="{ left: `${trackStart}%`, width: `${Math.max(trackEnd - trackStart, 0)}%` }"
-    />
+    <svg
+      class="route__tracks"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <line
+        v-for="piece in settledPieces"
+        :key="pieceKey(piece)"
+        v-bind="pieceLine(piece)"
+      />
 
-    <span
-      v-if="extension"
-      class="route__track route__track--today"
-      :style="{ left: `${extension.left}%`, width: `${extension.width}%` }"
-    />
+      <g
+        v-if="growingPieces.length"
+        class="route__grow"
+      >
+        <line
+          v-for="piece in growingPieces"
+          :key="pieceKey(piece)"
+          v-bind="pieceLine(piece)"
+        />
+      </g>
+    </svg>
 
     <span
       v-for="station in stations"
       :key="station.date"
       class="route__station"
       :class="stationModifier(station.status)"
-      :style="{ left: `${center(station.index)}%` }"
+      :style="{ left: `${center(station.x)}%`, top: `${levelY(station.level)}%` }"
       :title="stationTitle(station.date)"
     />
 
@@ -144,50 +149,57 @@ const stationTitle = (date: string) => formatLongDate(date)
       :aria-label="todayLabel"
       @click="emits('toggleToday')"
     >
-      <span class="route__today-mark" />
+      <span
+        class="route__today-mark"
+        :style="{ translate: markShift }"
+      />
     </button>
-
-    <span
-      v-else-if="todayStatus"
-      class="route__station"
-      :class="stationModifier(todayStatus)"
-      :style="{ left: `${center(todayIndex)}%` }"
-    />
   </div>
 </template>
 
 <style scoped>
 .route {
   position: relative;
-  height: 2.25rem;
   width: 100%;
 }
 
-.route__track {
+.route__tracks {
   position: absolute;
-  top: 50%;
-  height: 6px;
-  background: var(--line);
-  border-radius: var(--r-pill);
-  transform: translateY(-50%);
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
 }
 
-.route__track--today {
+.route__track {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 6px;
+  stroke-linecap: round;
+}
+
+.route__track--dashed {
+  stroke-dasharray: 4 11;
+}
+
+.route__grow {
+  transform-box: fill-box;
   transform-origin: left center;
-  animation: track-extend var(--t-move) var(--ease);
+  animation: route-grow var(--t-move) var(--ease);
 }
 
-@keyframes track-extend {
+@keyframes route-grow {
   from {
-    transform: translateY(-50%) scaleX(0);
+    transform: scaleX(0);
   }
 
   to {
-    transform: translateY(-50%) scaleX(1);
+    transform: scaleX(1);
   }
 }
 
-.route--closed .route__track {
+.route--closed .route__tracks {
   opacity: 0.55;
 }
 
@@ -295,7 +307,7 @@ const stationTitle = (date: string) => formatLongDate(date)
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .route__track--today {
+  .route__grow {
     animation: none;
   }
 }
