@@ -46,7 +46,7 @@ onMounted(async () => {
         История
       </h1>
       <p class="history__lead">
-        Отправленные дни. Прошлые записи закрыты на изменения — статусы прошлого не переписываются.
+        Отправленные дни.
       </p>
     </header>
 
@@ -84,13 +84,21 @@ onMounted(async () => {
               <span class="num">{{ formatLongDate(entry.date) }}</span>
               <span class="entry__weekday">{{ formatWeekday(entry.date) }}</span>
             </h2>
-            <p
-              v-if="submittedTime(entry)"
-              class="entry__stamp"
-            >
-              <span>отправлен в</span>
-              <span class="num">{{ submittedTime(entry) }}</span>
-            </p>
+            <div class="entry__meta">
+              <p
+                v-if="submittedTime(entry)"
+                class="entry__stamp"
+              >
+                <span>отправлен в</span>
+                <span class="num">{{ submittedTime(entry) }}</span>
+              </p>
+              <NuxtLink
+                :to="{ path: '/', query: { date: entry.date } }"
+                class="entry__open"
+              >
+                открыть на главной
+              </NuxtLink>
+            </div>
           </header>
 
           <p
@@ -217,11 +225,25 @@ onMounted(async () => {
   color: var(--ink-3);
 }
 
+.entry__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s-1) var(--s-4);
+}
+
 .entry__stamp {
   display: flex;
   gap: var(--s-1);
   font-size: 0.8125rem;
   color: var(--ink-3);
+}
+
+.entry__open {
+  font-size: 0.8125rem;
+  color: var(--accent-text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .entry__off {

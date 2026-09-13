@@ -2,7 +2,7 @@
 import { useDailyStore } from '~/stores/daily'
 import { useOffReasonsStore } from '~/stores/offReasons'
 import type { DraftItem } from '~/types/daily'
-import { formatLongDate, lastDays, todayIso } from '~/utils/date'
+import { formatLongDate, isIsoDate, lastDays, todayIso } from '~/utils/date'
 import { plural } from '~/utils/plural'
 
 definePageMeta({ layout: 'auth' })
@@ -10,10 +10,74 @@ definePageMeta({ layout: 'auth' })
 const store = useDailyStore()
 const offReasons = useOffReasonsStore()
 const toast = useToast()
+const route = useRoute()
+const router = useRouter()
+const pagePath = route.path
 
 const days = computed(() => lastDays(7, store.date))
-const title = computed(() => `Дейлик за ${formatLongDate(store.date)}`)
 const markedCount = computed(() => store.items.length)
+
+const hint = computed(() => {
+  if (store.isToday) {
+    return 'Тапни станцию за сегодня на тех линиях, где что-то было. Где не было — пропусти, линия придёт завтра.'
+  }
+
+  return `Тапни станцию за ${formatLongDate(store.date)} на тех линиях, где что-то было. Где не было — пропусти.`
+})
+
+const readonlyNote = computed(() => {
+  if (!store.editableUntil) return 'Только просмотр'
+
+  return `Только просмотр — этот день можно было править до ${formatLongDate(store.editableUntil)}`
+})
+
+const submittedNote = computed(() => {
+  if (store.isToday) return 'Сегодня его ещё можно править.'
+  if (!store.editableUntil) return undefined
+
+  return `Его можно править до ${formatLongDate(store.editableUntil)}.`
+})
+
+const goTo = (target: string) => {
+  void router.push({
+    query: {
+      ...route.query,
+      date: target === todayIso() ? undefined : target
+    }
+  })
+}
+
+const openDay = async (target: string) => {
+  const previous = store.date
+  const saved = await store.open(target)
+
+  if (saved) return
+
+  toast.add({
+    title: 'Не сохранилось',
+    description: `Правки за ${formatLongDate(previous)} остались на этом устройстве. Открой тот день, чтобы сохранить их.`,
+    color: 'error'
+  })
+}
+
+const syncDay = () => {
+  const requested = route.query.date
+  const today = todayIso()
+
+  if (requested === undefined) return openDay(today)
+
+  if (!isIsoDate(requested) || requested >= today) {
+    return router.replace({ query: { ...route.query, date: undefined } })
+  }
+
+  return openDay(requested)
+}
+
+watch(() => route.query.date, () => {
+  if (route.path !== pagePath) return
+
+  void syncDay()
+})
 
 const submittedTime = computed(() => {
   if (!store.submittedAt) return ''
@@ -37,7 +101,7 @@ const offReasonNoteModel = computed<string>({
 const onSubmit = async () => {
   try {
     await store.submit()
-    toast.add({ title: 'Дейлик отправлен', description: 'Сегодня его ещё можно править.' })
+    toast.add({ title: 'Дейлик отправлен', description: submittedNote.value })
   } catch {
     toast.add({
       title: 'Не отправилось',
@@ -48,7 +112,7 @@ const onSubmit = async () => {
 }
 
 onMounted(() => {
-  void store.load(todayIso())
+  void syncDay()
   void offReasons.load()
 })
 </script>
@@ -73,24 +137,15 @@ onMounted(() => {
         v-if="store.missingDays.length && store.isToday"
         :days="store.missingDays"
         :busy="store.saving"
-        @fill="store.load($event)"
+        @fill="goTo($event)"
         @mark-off="store.markDaysOff($event)"
       />
 
       <header class="daily__head">
-        <div class="daily__heading">
-          <h1 class="daily__title">
-            {{ title }}
-          </h1>
-          <button
-            v-if="!store.isToday"
-            type="button"
-            class="daily__back"
-            @click="store.load(todayIso())"
-          >
-            вернуться к сегодняшнему дню
-          </button>
-        </div>
+        <DailyDayNav
+          :date="store.date"
+          @select="goTo"
+        />
 
         <button
           v-if="store.isDayOff"
@@ -117,6 +172,13 @@ onMounted(() => {
         </DailyOffReasonMenu>
       </header>
 
+      <p
+        v-if="!store.isEditable"
+        class="daily__readonly"
+      >
+        {{ readonlyNote }}
+      </p>
+
       <DailyOffDay
         v-if="store.isDayOff"
         v-model:note="offReasonNoteModel"
@@ -141,7 +203,7 @@ onMounted(() => {
             v-if="store.isEditable"
             class="daily__hint"
           >
-            Тапни станцию за сегодня на тех линиях, где что-то было. Где не было — пропусти, линия придёт завтра.
+            {{ hint }}
           </p>
 
           <div class="daily__axis">
@@ -180,13 +242,6 @@ onMounted(() => {
             :editable="store.isEditable"
           />
         </section>
-
-        <p
-          v-if="!store.isEditable"
-          class="daily__readonly"
-        >
-          Этот день закрыт на изменения — статусы прошлого не переписываются.
-        </p>
       </template>
 
       <footer class="daily__foot">
@@ -283,20 +338,6 @@ onMounted(() => {
   gap: var(--s-3);
 }
 
-.daily__heading {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-1);
-}
-
-.daily__title {
-  font-size: 1.75rem;
-  font-weight: 600;
-  letter-spacing: -0.015em;
-  color: var(--ink);
-}
-
-.daily__back,
 .daily__retry {
   align-self: flex-start;
   padding: 0;
@@ -405,10 +446,6 @@ onMounted(() => {
 
   .daily__head {
     align-items: flex-start;
-  }
-
-  .daily__title {
-    font-size: 1.5rem;
   }
 
   .daily__foot {
