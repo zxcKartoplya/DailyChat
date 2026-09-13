@@ -12,6 +12,8 @@ type Props = {
   todayStatus?: ItemStatus | null
   interactive?: boolean
   title?: string
+  heightRem?: number
+  amplitudeRem?: number
 }
 
 const {
@@ -20,19 +22,18 @@ const {
   color,
   todayStatus = null,
   interactive = false,
-  title = ''
+  title = '',
+  heightRem = 2.25,
+  amplitudeRem = 0.5
 } = defineProps<Props>()
 
 const emits = defineEmits<{
   toggleToday: []
 }>()
 
-const HEIGHT_REM = 2.25
-const AMPLITUDE_REM = 0.5
-
 const cellWidth = computed(() => 100 / days.length)
 const center = (x: number) => (x + 0.5) * cellWidth.value
-const levelY = (level: RouteLevel) => 50 - level * (AMPLITUDE_REM / HEIGHT_REM) * 100
+const levelY = (level: RouteLevel) => 50 - level * (amplitudeRem / heightRem) * 100
 
 const todayIndex = computed(() => days.length - 1)
 
@@ -71,7 +72,7 @@ const pieceLine = (piece: RoutePiece) => ({
   class: ['route__track', { 'route__track--dashed': piece.stroke === 'dashed' }]
 })
 
-const markShift = computed(() => `0 ${-geometry.value.endLevel * AMPLITUDE_REM}rem`)
+const markShift = computed(() => `0 ${-geometry.value.endLevel * amplitudeRem}rem`)
 
 const stationModifier = (status: ItemStatus) => {
   if (status === ItemStatus.BLOCKED) return 'route__station--delayed'
@@ -99,7 +100,7 @@ const stationTitle = (date: string) => formatLongDate(date)
 <template>
   <div
     class="route"
-    :style="{ '--line': color, 'height': `${HEIGHT_REM}rem` }"
+    :style="{ '--line': color, 'height': `${heightRem}rem` }"
     :class="{ 'route--closed': geometry.closed }"
   >
     <svg

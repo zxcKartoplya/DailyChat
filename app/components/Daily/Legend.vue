@@ -1,3 +1,11 @@
+<script lang="ts" setup>
+type Props = {
+  today?: boolean
+}
+
+const { today = true } = defineProps<Props>()
+</script>
+
 <template>
   <dl class="legend">
     <div class="legend__item">
@@ -113,7 +121,10 @@
       </dt>
       <dd>бросил</dd>
     </div>
-    <div class="legend__item">
+    <div
+      v-if="today"
+      class="legend__item"
+    >
       <dt class="legend__mark legend__mark--today" />
       <dd>сегодня</dd>
     </div>
