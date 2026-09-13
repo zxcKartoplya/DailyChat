@@ -57,5 +57,7 @@ export const mapDay = (dto: Schemas['DayView']): DailyDay => ({
   entry: dto.entry ? mapEntry(dto.entry) : null,
   openChains: (dto.open_chains ?? []).map(mapOpenChain),
   missingDays: dto.missing_days ?? [],
-  editableFrom: dto.editable_from
+  editable: dto.editable,
+  editableFrom: dto.editable_from,
+  editableUntil: dto.editable_until
 })

@@ -19,6 +19,12 @@ export const fromIsoDate = (iso: string): Date => {
   return new Date(year ?? 1970, (month ?? 1) - 1, day ?? 1)
 }
 
+const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
+
+export const isIsoDate = (value: unknown): value is string => {
+  return typeof value === 'string' && ISO_DATE_PATTERN.test(value) && toIsoDate(fromIsoDate(value)) === value
+}
+
 export const shiftDays = (iso: string, days: number): string => {
   const date = fromIsoDate(iso)
   date.setDate(date.getDate() + days)
@@ -33,6 +39,8 @@ export const formatLongDate = (iso: string): string => {
 
   return `${date.getDate()} ${MONTHS_GENITIVE[date.getMonth()]}`
 }
+
+export const formatDayTitle = (iso: string): string => `${formatLongDate(iso)}, ${formatWeekday(iso)}`
 
 export const formatDayNumber = (iso: string): string => String(fromIsoDate(iso).getDate())
 

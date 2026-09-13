@@ -74,7 +74,9 @@ export type DailyDay = {
   entry: DailyEntry | null
   openChains: OpenChain[]
   missingDays: string[]
+  editable: boolean
   editableFrom: string
+  editableUntil: string
 }
 
 export type DraftItem = {

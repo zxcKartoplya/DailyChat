@@ -34,18 +34,16 @@ export const useDailyStore = defineStore('daily', () => {
   const offReasonNote = ref('')
 
   let saveTimer: ReturnType<typeof setTimeout> | null = null
+  let pendingSave: Promise<boolean> | null = null
+  let dirty = false
+  let loadSeq = 0
+  let openSeq = 0
 
   const isToday = computed(() => date.value === todayIso())
   const isDayOff = computed(() => dayType.value === DayType.OFF)
   const isSubmitted = computed(() => submittedAt.value !== null)
-
-  const isEditable = computed(() => {
-    if (!day.value) return false
-    if (isToday.value) return true
-    if (date.value < day.value.editableFrom) return false
-
-    return submittedAt.value === null
-  })
+  const isEditable = computed(() => day.value?.editable ?? false)
+  const editableUntil = computed(() => day.value?.editableUntil ?? null)
 
   const openChains = computed(() => day.value?.openChains ?? [])
   const missingDays = computed(() => day.value?.missingDays ?? [])
@@ -96,6 +94,15 @@ export const useDailyStore = defineStore('daily', () => {
 
   const canSubmit = computed(() => isDayOff.value || items.value.length > 0)
 
+  const isCurrent = (seq: number) => seq === loadSeq
+
+  const cancelSaveTimer = () => {
+    if (!saveTimer) return
+
+    clearTimeout(saveTimer)
+    saveTimer = null
+  }
+
   const readLocalDraft = () => {
     if (import.meta.server) return
 
@@ -141,16 +148,24 @@ export const useDailyStore = defineStore('daily', () => {
     }
   }
 
-  const load = async (target = todayIso()) => {
+  const load = async (target: string) => {
+    loadSeq += 1
+    const seq = loadSeq
+
     loading.value = true
+    saving.value = false
     date.value = target
     chainDrafts.value = {}
     newItems.value = []
     savedAt.value = null
     saveFailed.value = false
+    dirty = false
 
     try {
       const result = await api.getDay(target)
+
+      if (!isCurrent(seq)) return
+
       day.value = result
       dayType.value = result.entry?.dayType ?? DayType.WORK
       offReason.value = result.entry?.offReason ?? null
@@ -175,9 +190,9 @@ export const useDailyStore = defineStore('daily', () => {
         chainDrafts.value[item.chainId] = { marked: true, text: item.text, status: item.status }
       })
 
-      readLocalDraft()
+      if (result.editable) readLocalDraft()
     } finally {
-      loading.value = false
+      if (isCurrent(seq)) loading.value = false
     }
   }
 
@@ -188,36 +203,90 @@ export const useDailyStore = defineStore('daily', () => {
     submittedAt.value = entry.status === EntryStatus.SUBMITTED ? entry.submittedAt : null
   }
 
-  const persist = async () => {
-    if (!isEditable.value) return
+  const runSave = async (): Promise<boolean> => {
+    const seq = loadSeq
+    const target = date.value
+    const payload = dayWrite()
 
+    dirty = false
     saving.value = true
     saveFailed.value = false
 
     try {
-      applyEntry(await api.saveDay(date.value, dayWrite()))
-      savedAt.value = new Date().toISOString()
+      const entry = await api.saveDay(target, payload)
+
+      if (isCurrent(seq)) {
+        applyEntry(entry)
+        savedAt.value = new Date().toISOString()
+      }
+
+      return true
     } catch {
-      saveFailed.value = true
+      if (isCurrent(seq)) {
+        dirty = true
+        saveFailed.value = true
+      }
+
+      return false
     } finally {
-      saving.value = false
+      if (isCurrent(seq)) saving.value = false
     }
   }
 
-  const saveNow = () => {
-    writeLocalDraft()
+  const persist = (): Promise<boolean> => {
+    if (!isEditable.value || loading.value) return Promise.resolve(true)
 
-    if (saveTimer) clearTimeout(saveTimer)
+    const request = runSave()
+
+    pendingSave = request
+    void request.finally(() => {
+      if (pendingSave === request) pendingSave = null
+    })
+
+    return request
+  }
+
+  const flush = async (): Promise<boolean> => {
+    cancelSaveTimer()
+
+    const inFlight = pendingSave ? await pendingSave : true
+
+    if (!dirty) return inFlight
+
+    return persist()
+  }
+
+  const open = async (target: string): Promise<boolean> => {
+    openSeq += 1
+    const seq = openSeq
+
+    const saved = await flush()
+
+    if (seq !== openSeq) return saved
+
+    await load(target)
+
+    return saved
+  }
+
+  const saveNow = () => {
+    if (!isEditable.value) return Promise.resolve(true)
+
+    writeLocalDraft()
+    cancelSaveTimer()
 
     return persist()
   }
 
   const scheduleSave = () => {
-    writeLocalDraft()
+    if (!isEditable.value) return
 
-    if (saveTimer) clearTimeout(saveTimer)
+    dirty = true
+    writeLocalDraft()
+    cancelSaveTimer()
 
     saveTimer = setTimeout(() => {
+      saveTimer = null
       void persist()
     }, AUTOSAVE_DELAY)
   }
@@ -272,38 +341,55 @@ export const useDailyStore = defineStore('daily', () => {
   const markDaysOff = async (dates: string[]) => {
     if (!day.value) return
 
+    const seq = loadSeq
+
     saving.value = true
 
     try {
       await api.markDaysOff(dates)
-      day.value = {
-        ...day.value,
-        missingDays: day.value.missingDays.filter(date => !dates.includes(date))
+
+      if (isCurrent(seq) && day.value) {
+        day.value = {
+          ...day.value,
+          missingDays: day.value.missingDays.filter(date => !dates.includes(date))
+        }
       }
     } catch {
-      saveFailed.value = true
+      if (isCurrent(seq)) saveFailed.value = true
     } finally {
-      saving.value = false
+      if (isCurrent(seq)) saving.value = false
     }
   }
 
   const submit = async () => {
     if (!canSubmit.value || !isEditable.value) return
 
-    if (saveTimer) clearTimeout(saveTimer)
+    cancelSaveTimer()
 
+    const seq = loadSeq
+    const target = date.value
+    const payload = dayWrite()
+
+    dirty = false
     saving.value = true
     saveFailed.value = false
 
     try {
-      await api.saveDay(date.value, dayWrite())
-      applyEntry(await api.submitEntry(date.value))
+      await api.saveDay(target, payload)
+      const entry = await api.submitEntry(target)
+
+      if (!isCurrent(seq)) return
+
+      applyEntry(entry)
       savedAt.value = submittedAt.value
     } catch {
+      if (!isCurrent(seq)) return
+
+      dirty = true
       saveFailed.value = true
       throw new Error('submit failed')
     } finally {
-      saving.value = false
+      if (isCurrent(seq)) saving.value = false
     }
   }
 
@@ -328,10 +414,11 @@ export const useDailyStore = defineStore('daily', () => {
     isDayOff,
     isSubmitted,
     isEditable,
+    editableUntil,
     canSubmit,
     chainDraft,
     isChainTouched,
-    load,
+    open,
     setChainText,
     setChainStatus,
     toggleChainMark,
