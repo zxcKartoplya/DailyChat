@@ -1,6 +1,6 @@
 import { useDailyApi } from '~/composables/api/useDailyApi'
 import { useOffReasonsStore } from '~/stores/offReasons'
-import type { DailyDay, DailyEntry, DayWrite, DraftItem, OffReason } from '~/types/daily'
+import type { DailyDay, DailyEntry, DayWrite, DraftItem, OffReason, OpenChain } from '~/types/daily'
 import { DayType, EntryStatus, ItemStatus, OFF_REASON_NOTE_MAX } from '~/types/daily'
 import { todayIso } from '~/utils/date'
 
@@ -53,6 +53,18 @@ export const useDailyStore = defineStore('daily', () => {
   }
 
   const isChainTouched = (chainId: string): boolean => chainDraft(chainId).marked
+
+  const unchangedDraft = (chain: OpenChain): ChainDraft => ({
+    marked: true,
+    text: '',
+    status: chain.lastStatus ?? ItemStatus.IN_PROGRESS
+  })
+
+  const unmarkedChains = computed(() => openChains.value.filter(chain => !isChainTouched(chain.chainId)))
+
+  const hasUnmarkedChains = computed(() => unmarkedChains.value.length > 0)
+
+  const hasMarkedChains = computed(() => openChains.value.some(chain => isChainTouched(chain.chainId)))
 
   const items = computed<DraftItem[]>(() => {
     if (isDayOff.value) return []
@@ -311,6 +323,29 @@ export const useDailyStore = defineStore('daily', () => {
     scheduleSave()
   }
 
+  const markChainUnchanged = (chainId: string) => {
+    if (isChainTouched(chainId)) return
+
+    const chain = openChains.value.find(item => item.chainId === chainId)
+
+    if (!chain) return
+
+    chainDrafts.value[chainId] = unchangedDraft(chain)
+    scheduleSave()
+  }
+
+  const markAllChainsUnchanged = () => {
+    const pending = unmarkedChains.value
+
+    if (!pending.length) return
+
+    pending.forEach((chain) => {
+      chainDrafts.value[chain.chainId] = unchangedDraft(chain)
+    })
+
+    scheduleSave()
+  }
+
   const setNewItems = (value: DraftItem[]) => {
     newItems.value = value
     scheduleSave()
@@ -416,12 +451,16 @@ export const useDailyStore = defineStore('daily', () => {
     isEditable,
     editableUntil,
     canSubmit,
+    hasUnmarkedChains,
+    hasMarkedChains,
     chainDraft,
     isChainTouched,
     open,
     setChainText,
     setChainStatus,
     toggleChainMark,
+    markChainUnchanged,
+    markAllChainsUnchanged,
     setNewItems,
     setDayOff,
     setWorkDay,

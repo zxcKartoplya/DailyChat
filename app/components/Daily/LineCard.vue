@@ -19,6 +19,7 @@ const status = defineModel<ItemStatus>('status', { default: ItemStatus.IN_PROGRE
 
 const emits = defineEmits<{
   toggleMark: []
+  markUnchanged: []
 }>()
 
 const color = computed(() => lineColorVar(chain.chainId))
@@ -114,7 +115,21 @@ watch(() => marked, (value) => {
     </div>
 
     <div
-      v-else-if="!editable && marked"
+      v-else-if="editable"
+      class="line__controls"
+    >
+      <button
+        type="button"
+        class="btn btn--secondary btn--sm line__unchanged"
+        :aria-label="`Без изменений по линии «${chain.title}»`"
+        @click="emits('markUnchanged')"
+      >
+        без изменений
+      </button>
+    </div>
+
+    <div
+      v-else-if="marked"
       class="line__readonly"
     >
       <span class="line__readonly-status">{{ STATUS_LABEL[status] }}</span>
@@ -205,6 +220,10 @@ watch(() => marked, (value) => {
   display: flex;
   flex-direction: column;
   gap: var(--s-3);
+}
+
+.line__unchanged {
+  align-self: flex-start;
 }
 
 .line__note-open {

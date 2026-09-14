@@ -19,10 +19,14 @@ const markedCount = computed(() => store.items.length)
 
 const hint = computed(() => {
   if (store.isToday) {
-    return 'Тапни станцию за сегодня на тех линиях, где что-то было. Где не было — пропусти, линия придёт завтра.'
+    return 'Отметь линии, где работа шла: станцией за сегодня или кнопкой «без изменений» — запись не обязательна. Где не было — пропусти, линия придёт завтра.'
   }
 
-  return `Тапни станцию за ${formatLongDate(store.date)} на тех линиях, где что-то было. Где не было — пропусти.`
+  return `Отметь линии, где работа шла: станцией за ${formatLongDate(store.date)} или кнопкой «без изменений» — запись не обязательна. Где не было — пропусти.`
+})
+
+const markAllLabel = computed(() => {
+  return store.hasMarkedChains ? 'остальные без изменений' : 'ничего не изменилось'
 })
 
 const readonlyNote = computed(() => {
@@ -193,9 +197,21 @@ onMounted(() => {
           class="daily__section"
         >
           <div class="daily__section-head">
-            <h2 class="daily__section-title">
-              В пути
-            </h2>
+            <div class="daily__section-lead">
+              <h2 class="daily__section-title">
+                В пути
+              </h2>
+
+              <button
+                v-if="store.isEditable && store.hasUnmarkedChains"
+                type="button"
+                class="btn btn--secondary btn--sm"
+                @click="store.markAllChainsUnchanged()"
+              >
+                {{ markAllLabel }}
+              </button>
+            </div>
+
             <DailyLegend />
           </div>
 
@@ -223,6 +239,7 @@ onMounted(() => {
               @update:text="store.setChainText(chain.chainId, $event)"
               @update:status="store.setChainStatus(chain.chainId, $event)"
               @toggle-mark="store.toggleChainMark(chain.chainId)"
+              @mark-unchanged="store.markChainUnchanged(chain.chainId)"
             />
           </div>
         </section>
@@ -374,6 +391,13 @@ onMounted(() => {
   align-items: baseline;
   justify-content: space-between;
   gap: var(--s-3) var(--s-5);
+}
+
+.daily__section-lead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-3);
 }
 
 .daily__hint {
