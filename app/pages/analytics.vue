@@ -5,6 +5,7 @@ import { ActivityPeriod } from '~/types/activity'
 import { daysRange, formatDateRange } from '~/utils/date'
 import { ApiError } from '~/utils/errors/ApiError'
 import { plural } from '~/utils/plural'
+import { isSessionEnded } from '~/utils/session'
 
 definePageMeta({ layout: 'auth' })
 useHead({ title: 'Аналитика' })
@@ -59,7 +60,7 @@ const load = async () => {
 
     activity.value = result
   } catch (caught) {
-    if (current !== requestId) return
+    if (current !== requestId || isSessionEnded(caught)) return
 
     activity.value = null
     error.value = caught instanceof ApiError ? caught.message : 'Не удалось загрузить активность'

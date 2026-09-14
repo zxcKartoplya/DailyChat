@@ -1,5 +1,6 @@
 import type { FetchOptions } from 'ofetch'
 
+import type { NuxtApp } from '#app'
 import type { ApiQueryType } from '~/types/api'
 import { ApiHttpCode } from '~/types/api'
 import { ApiError } from '~/utils/errors/ApiError'
@@ -7,8 +8,11 @@ import { CommonError } from '~/utils/errors/CommonError'
 import { NotFoundError } from '~/utils/errors/NotFoundError'
 import { UnauthorizedError } from '~/utils/errors/UnauthorizedError'
 import { ValidationError } from '~/utils/errors/ValidationError'
+import { isLoginPath, loginLocation } from '~/utils/session'
 
 type RequestBody = FetchOptions['body']
+
+const sessionEnds = new WeakMap<NuxtApp, Promise<void>>()
 
 type ValidationIssue = {
   loc?: (string | number)[]
@@ -41,6 +45,8 @@ const validationFields = (payload: unknown): Record<string, string> => {
 }
 
 export const useApi = () => {
+  const nuxtApp = useNuxtApp()
+  const router = useRouter()
   // originally from .env API_URL
   const baseURL = useRuntimeConfig().public.apiUrl
   const cookieHeader = import.meta.server
@@ -130,7 +136,7 @@ export const useApi = () => {
 
         switch (response.status) {
           case ApiHttpCode.UNAUTHORIZED:
-            await dropSession()
+            await endSession()
             throw new UnauthorizedError()
           case ApiHttpCode.VALIDATION_ERROR:
             throw new ValidationError(
@@ -168,14 +174,30 @@ export const useApi = () => {
     return token.value ? { Authorization: `Bearer ${token.value}` } : {}
   }
 
-  const dropSession = async () => {
-    const { logout, token } = useAuth()
+  const leaveToLogin = async () => {
+    const { path, fullPath } = router.currentRoute.value
 
-    if (!token.value) return
+    if (isLoginPath(path)) return
 
-    logout()
+    await nuxtApp.runWithContext(() => {
+      useAuth().logout()
 
-    await navigateTo('/login')
+      return navigateTo(loginLocation(fullPath), { replace: true })
+    })
+  }
+
+  const endSession = (): Promise<void> => {
+    const pending = sessionEnds.get(nuxtApp)
+
+    if (pending) return pending
+
+    const leaving = leaveToLogin().finally(() => {
+      sessionEnds.delete(nuxtApp)
+    })
+
+    sessionEnds.set(nuxtApp, leaving)
+
+    return leaving
   }
 
   const buildUrl = (path: string): string => {

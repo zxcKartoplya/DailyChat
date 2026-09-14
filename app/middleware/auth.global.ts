@@ -1,13 +1,14 @@
-const LOGIN_PATH = '/login'
+import { isLoginPath, loginLocation, safeRedirect } from '~/utils/session'
 
 export default defineNuxtRouteMiddleware((to) => {
   const { token } = useAuth()
+  const isLogin = isLoginPath(to.path)
 
-  if (!token.value && to.path !== LOGIN_PATH) {
-    return navigateTo(LOGIN_PATH)
+  if (!token.value && !isLogin) {
+    return navigateTo(loginLocation(to.fullPath))
   }
 
-  if (token.value && to.path === LOGIN_PATH) {
-    return navigateTo('/')
+  if (token.value && isLogin) {
+    return navigateTo(safeRedirect(to.query.redirect))
   }
 })

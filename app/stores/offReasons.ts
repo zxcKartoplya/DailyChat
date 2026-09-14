@@ -1,5 +1,6 @@
 import { useDailyApi } from '~/composables/api/useDailyApi'
 import type { OffReason, OffReasonOption } from '~/types/daily'
+import { isSessionEnded } from '~/utils/session'
 
 export const useOffReasonsStore = defineStore('offReasons', () => {
   const api = useDailyApi()
@@ -23,8 +24,8 @@ export const useOffReasonsStore = defineStore('offReasons', () => {
         options.value = result
         loaded.value = true
       })
-      .catch(() => {
-        failed.value = true
+      .catch((caught: unknown) => {
+        if (!isSessionEnded(caught)) failed.value = true
       })
       .finally(() => {
         loading.value = false
