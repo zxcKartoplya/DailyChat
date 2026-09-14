@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { useUndoStore } from '~/stores/undo'
 import type { DraftItem } from '~/types/daily'
 import { ItemStatus } from '~/types/daily'
 import { lineColorVar } from '~/utils/lineColor'
@@ -9,6 +10,8 @@ type Props = {
 
 const { editable = true } = defineProps<Props>()
 const items = defineModel<DraftItem[]>({ default: () => [] })
+
+const undo = useUndoStore()
 
 const composer = ref('')
 const composerField = ref<HTMLTextAreaElement | null>(null)
@@ -74,8 +77,27 @@ const edit = (item: DraftItem) => {
   })
 }
 
+const putBack = (item: DraftItem, position: number) => {
+  if (items.value.some(entry => entry.key === item.key)) return
+
+  const next = [...items.value]
+
+  next.splice(Math.min(position, next.length), 0, item)
+  items.value = next
+}
+
 const remove = (key: string) => {
+  const position = items.value.findIndex(item => item.key === key)
+  const removed = items.value[position]
+
+  if (!removed) return
+
   items.value = items.value.filter(item => item.key !== key)
+
+  undo.propose({
+    title: 'Пункт убран',
+    restore: () => putBack(removed, position)
+  })
 }
 
 const setLink = (key: string, value: string) => {

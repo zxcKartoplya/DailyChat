@@ -1,8 +1,10 @@
 import { useDailyApi } from '~/composables/api/useDailyApi'
 import { useOffReasonsStore } from '~/stores/offReasons'
+import { useUndoStore } from '~/stores/undo'
 import type { DailyDay, DailyEntry, DayWrite, DraftItem, OffReason, OpenChain } from '~/types/daily'
 import { DayType, EntryStatus, ItemStatus, OFF_REASON_NOTE_MAX } from '~/types/daily'
 import { todayIso } from '~/utils/date'
+import { plural } from '~/utils/plural'
 
 type OffPayload = Pick<DayWrite, 'offReason' | 'offReasonNote'>
 
@@ -12,6 +14,11 @@ type ChainDraft = {
   status: ItemStatus
 }
 
+type ChainSnapshot = {
+  chainId: string
+  draft: ChainDraft
+}
+
 const AUTOSAVE_DELAY = 800
 
 const draftStorageKey = (date: string) => `daily-draft:${date}`
@@ -19,6 +26,7 @@ const draftStorageKey = (date: string) => `daily-draft:${date}`
 export const useDailyStore = defineStore('daily', () => {
   const api = useDailyApi()
   const offReasons = useOffReasonsStore()
+  const undo = useUndoStore()
 
   const date = ref<string>(todayIso())
   const day = ref<DailyDay | null>(null)
@@ -173,6 +181,8 @@ export const useDailyStore = defineStore('daily', () => {
     saveFailed.value = false
     dirty = false
 
+    undo.forget()
+
     try {
       const result = await api.getDay(target)
 
@@ -282,6 +292,8 @@ export const useDailyStore = defineStore('daily', () => {
   }
 
   const saveNow = () => {
+    undo.forget()
+
     if (!isEditable.value) return Promise.resolve(true)
 
     writeLocalDraft()
@@ -291,6 +303,8 @@ export const useDailyStore = defineStore('daily', () => {
   }
 
   const scheduleSave = () => {
+    undo.forget()
+
     if (!isEditable.value) return
 
     dirty = true
@@ -313,6 +327,14 @@ export const useDailyStore = defineStore('daily', () => {
     scheduleSave()
   }
 
+  const restoreChains = (snapshots: ChainSnapshot[]) => () => {
+    snapshots.forEach((snapshot) => {
+      chainDrafts.value[snapshot.chainId] = snapshot.draft
+    })
+
+    void saveNow()
+  }
+
   const toggleChainMark = (chainId: string) => {
     const draft = chainDraft(chainId)
 
@@ -321,6 +343,13 @@ export const useDailyStore = defineStore('daily', () => {
       : { ...draft, marked: true }
 
     scheduleSave()
+
+    if (!draft.marked) return
+
+    undo.propose({
+      title: 'Отметка снята',
+      restore: restoreChains([{ chainId, draft }])
+    })
   }
 
   const markChainUnchanged = (chainId: string) => {
@@ -339,11 +368,21 @@ export const useDailyStore = defineStore('daily', () => {
 
     if (!pending.length) return
 
+    const snapshots = pending.map<ChainSnapshot>(chain => ({
+      chainId: chain.chainId,
+      draft: chainDraft(chain.chainId)
+    }))
+
     pending.forEach((chain) => {
       chainDrafts.value[chain.chainId] = unchangedDraft(chain)
     })
 
     scheduleSave()
+
+    undo.propose({
+      title: `Без изменений: ${pending.length} ${plural(pending.length, ['линия', 'линии', 'линий'])}`,
+      restore: restoreChains(snapshots)
+    })
   }
 
   const setNewItems = (value: DraftItem[]) => {
@@ -399,6 +438,7 @@ export const useDailyStore = defineStore('daily', () => {
   const submit = async () => {
     if (!canSubmit.value || !isEditable.value) return
 
+    undo.forget()
     cancelSaveTimer()
 
     const seq = loadSeq

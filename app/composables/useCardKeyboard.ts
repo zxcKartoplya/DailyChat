@@ -3,6 +3,7 @@ type CardKeyboardOptions = {
   onToggle: (index: number) => void
   onDigit: (index: number, position: number) => void
   onSubmit: () => void
+  onUndo: () => void
 }
 
 const CARD_SELECTOR = '[data-card]'
@@ -75,16 +76,25 @@ export const useCardKeyboard = (options: CardKeyboardOptions) => {
     options.onDigit(index, Number(event.key) - 1)
   }
 
-  const onSubmitKeydown = (event: KeyboardEvent) => {
-    if (event.key !== 'Enter' || !(event.metaKey || event.ctrlKey)) return
-    if (!options.enabled()) return
+  const onPageKeydown = (event: KeyboardEvent) => {
+    if (!(event.metaKey || event.ctrlKey) || !options.enabled()) return
+
+    if (event.key === 'Enter') {
+      event.preventDefault()
+      options.onSubmit()
+
+      return
+    }
+
+    if (event.key.toLowerCase() !== 'z' || event.shiftKey) return
+    if (event.target instanceof HTMLElement && isTextEntry(event.target)) return
 
     event.preventDefault()
-    options.onSubmit()
+    options.onUndo()
   }
 
-  onMounted(() => window.addEventListener('keydown', onSubmitKeydown))
-  onBeforeUnmount(() => window.removeEventListener('keydown', onSubmitKeydown))
+  onMounted(() => window.addEventListener('keydown', onPageKeydown))
+  onBeforeUnmount(() => window.removeEventListener('keydown', onPageKeydown))
 
   return { onKeydown }
 }

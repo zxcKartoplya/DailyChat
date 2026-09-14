@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { useDailyStore } from '~/stores/daily'
 import { useOffReasonsStore } from '~/stores/offReasons'
+import { UNDO_TTL, useUndoStore } from '~/stores/undo'
 import type { DraftItem } from '~/types/daily'
 import { STATUS_ORDER } from '~/types/daily'
 import { formatLongDate, isIsoDate, lastDays, todayIso } from '~/utils/date'
@@ -10,6 +11,7 @@ definePageMeta({ layout: 'auth' })
 
 const store = useDailyStore()
 const offReasons = useOffReasonsStore()
+const undo = useUndoStore()
 const toast = useToast()
 const route = useRoute()
 const router = useRouter()
@@ -116,6 +118,20 @@ const onSubmit = async () => {
   }
 }
 
+const undoToastId = ref<string | number | null>(null)
+
+watch(() => undo.offer, (offer) => {
+  if (undoToastId.value !== null) toast.remove(undoToastId.value)
+
+  undoToastId.value = offer
+    ? toast.add({
+      title: offer.title,
+      duration: UNDO_TTL,
+      actions: [{ label: 'отменить', onClick: () => undo.run() }]
+    }).id
+    : null
+})
+
 const chainAt = (index: number) => store.openChains[index] ?? null
 
 const keyboard = useCardKeyboard({
@@ -139,7 +155,8 @@ const keyboard = useCardKeyboard({
     if (!store.canSubmit || store.saving) return
 
     void onSubmit()
-  }
+  },
+  onUndo: () => undo.run()
 })
 
 onMounted(() => {
@@ -264,6 +281,9 @@ onMounted(() => {
             </span>
             <span class="daily__key">
               <kbd>Esc</kbd> выйти из записи
+            </span>
+            <span class="daily__key">
+              <kbd>⌘</kbd>/<kbd>Ctrl</kbd>+<kbd>Z</kbd> отменить
             </span>
             <span class="daily__key">
               <kbd>⌘</kbd>/<kbd>Ctrl</kbd>+<kbd>↵</kbd> отправить
