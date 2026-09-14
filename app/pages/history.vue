@@ -1,135 +1,249 @@
 <script lang="ts" setup>
+import { useActivityApi } from '~/composables/api/useActivityApi'
 import { useDailyApi } from '~/composables/api/useDailyApi'
+import { useOffReasonsStore } from '~/stores/offReasons'
+import type { EmployeeActivity } from '~/types/activity'
+import { ActivityPeriod } from '~/types/activity'
 import type { DailyEntry } from '~/types/daily'
-import { DayType, ItemStatus, STATUS_LABEL } from '~/types/daily'
-import { formatLongDate, formatWeekday } from '~/utils/date'
-import { lineColorVar } from '~/utils/lineColor'
+import { daysBetween, formatDateRange, isIsoDate, shiftDays, todayIso } from '~/utils/date'
+import { ApiError } from '~/utils/errors/ApiError'
+import { buildHistoryWeeks } from '~/utils/historyTimeline'
 
 definePageMeta({ layout: 'auth' })
 useHead({ title: 'История' })
 
+const route = useRoute()
+const router = useRouter()
+const { getActivity } = useActivityApi()
 const { getHistory } = useDailyApi()
+const offReasons = useOffReasonsStore()
 
-const entries = ref<DailyEntry[]>([])
-const loading = ref(true)
+const DEFAULT_PERIOD = ActivityPeriod.MONTH
 
-const submittedTime = (entry: DailyEntry) => {
-  if (!entry.submittedAt) return ''
+const periodItems = [
+  { label: 'Неделя', value: ActivityPeriod.WEEK },
+  { label: 'Месяц', value: ActivityPeriod.MONTH }
+]
 
-  return new Date(entry.submittedAt).toLocaleTimeString('ru-RU', {
-    hour: '2-digit',
-    minute: '2-digit'
+const isPeriod = (value: unknown): value is ActivityPeriod => {
+  return Object.values(ActivityPeriod).includes(value as ActivityPeriod)
+}
+
+const period = computed<ActivityPeriod>(() => {
+  const value = route.query.period
+
+  return isPeriod(value) ? value : DEFAULT_PERIOD
+})
+
+const endDate = computed<string | undefined>(() => {
+  const value = route.query.date
+
+  return isIsoDate(value) && value < todayIso() ? value : undefined
+})
+
+const selectPeriod = (value: string | number) => {
+  if (!isPeriod(value) || value === period.value) return
+
+  router.replace({
+    query: {
+      ...route.query,
+      period: value === DEFAULT_PERIOD ? undefined : value
+    }
   })
 }
 
-const markModifier = (status: ItemStatus) => {
-  if (status === ItemStatus.BLOCKED) return 'entry__mark--delayed'
-  if (status === ItemStatus.DONE) return 'entry__mark--terminus'
-  if (status === ItemStatus.DROPPED) return 'entry__mark--cut'
-
-  return 'entry__mark--stop'
+const goTo = (target: string) => {
+  router.push({
+    query: {
+      ...route.query,
+      date: target >= todayIso() ? undefined : target
+    }
+  })
 }
 
-onMounted(async () => {
+const activity = ref<EmployeeActivity | null>(null)
+const entries = ref<DailyEntry[]>([])
+const loading = ref(true)
+const error = ref('')
+
+let requestId = 0
+
+const load = async () => {
+  requestId += 1
+  const current = requestId
+
+  loading.value = true
+  error.value = ''
+
   try {
-    entries.value = await getHistory()
+    const result = await getActivity(period.value, endDate.value)
+    const list = await getHistory(result.dateFrom, result.dateTo)
+
+    if (current !== requestId) return
+
+    activity.value = result
+    entries.value = list
+  } catch (caught) {
+    if (current !== requestId) return
+
+    activity.value = null
+    entries.value = []
+    error.value = caught instanceof ApiError ? caught.message : 'Не удалось загрузить историю'
   } finally {
-    loading.value = false
+    if (current === requestId) loading.value = false
   }
+}
+
+const dropInvalidDate = () => {
+  if (route.query.date === undefined || endDate.value !== undefined) return
+
+  router.replace({ query: { ...route.query, date: undefined } })
+}
+
+onMounted(() => {
+  void offReasons.load()
+  dropInvalidDate()
+  void load()
 })
+
+watch(() => route.query.date, dropInvalidDate)
+
+watch([period, endDate], () => {
+  void load()
+})
+
+const periodCaption = computed(() => {
+  if (!activity.value) return ''
+
+  return formatDateRange(activity.value.dateFrom, activity.value.dateTo)
+})
+
+const periodLength = computed(() => {
+  if (!activity.value) return 0
+
+  return daysBetween(activity.value.dateFrom, activity.value.dateTo) + 1
+})
+
+const isLatest = computed(() => !activity.value || activity.value.dateTo >= todayIso())
+
+const goBack = () => {
+  if (activity.value) goTo(shiftDays(activity.value.dateFrom, -1))
+}
+
+const goForward = () => {
+  if (activity.value && !isLatest.value) goTo(shiftDays(activity.value.dateTo, periodLength.value))
+}
+
+const weeks = computed(() => {
+  if (!activity.value) return []
+
+  return buildHistoryWeeks({
+    dateFrom: activity.value.dateFrom,
+    dateTo: activity.value.dateTo,
+    chains: activity.value.chains,
+    entries: entries.value
+  })
+})
+
+const isEmpty = computed(() => !entries.value.length && weeks.value.every(week => !week.rows.length))
 </script>
 
 <template>
   <div class="history">
     <header class="history__head">
-      <h1 class="history__title">
-        История
-      </h1>
-      <p class="history__lead">
-        Отправленные дни.
-      </p>
+      <div class="history__heading">
+        <h1 class="history__title">
+          История
+        </h1>
+        <p class="history__lead">
+          Твои линии за период, по неделям. Строка раскрывает записи по дням, дата открывает день на главной.
+        </p>
+      </div>
+
+      <UTabs
+        :items="periodItems"
+        :model-value="period"
+        :content="false"
+        color="neutral"
+        aria-label="Период"
+        :ui="{
+          root: 'w-auto',
+          list: 'w-auto rounded-full',
+          indicator: 'rounded-full shadow-none',
+          trigger: 'rounded-full px-4'
+        }"
+        @update:model-value="selectPeriod"
+      />
     </header>
+
+    <div class="history__nav">
+      <button
+        type="button"
+        class="btn btn--ghost btn--sm history__step"
+        aria-label="Предыдущий период"
+        :disabled="!activity"
+        @click="goBack"
+      >
+        <UIcon name="i-lucide-chevron-left" />
+      </button>
+      <button
+        type="button"
+        class="btn btn--ghost btn--sm history__step"
+        aria-label="Следующий период"
+        :disabled="isLatest"
+        @click="goForward"
+      >
+        <UIcon name="i-lucide-chevron-right" />
+      </button>
+      <p
+        v-if="periodCaption"
+        class="history__period num"
+      >
+        {{ periodCaption }}
+      </p>
+    </div>
 
     <div
       v-if="loading"
       class="history__skeleton"
       role="status"
-      aria-label="Загружаем записи"
+      aria-label="Собираем линии за период"
     >
       <span
-        v-for="line in 2"
-        :key="line"
+        v-for="strip in 2"
+        :key="strip"
         class="history__skeleton-card"
       />
     </div>
 
-    <p
-      v-else-if="!entries.length"
-      class="history__empty panel"
+    <section
+      v-else-if="error"
+      class="history__state panel"
+      role="alert"
     >
-      Записей пока нет. Первый отправленный дейлик появится здесь.
+      <p class="history__state-text">
+        Не получилось собрать историю: {{ error }}
+      </p>
+      <button
+        type="button"
+        class="btn btn--secondary btn--sm"
+        @click="load"
+      >
+        Повторить
+      </button>
+    </section>
+
+    <p
+      v-else-if="isEmpty"
+      class="history__state panel history__state-text"
+    >
+      За период записей не было.
     </p>
 
-    <ol
+    <DailyHistoryTimeline
       v-else
-      class="history__list"
-    >
-      <li
-        v-for="entry in entries"
-        :key="entry.id"
-      >
-        <article class="entry panel">
-          <header class="entry__head">
-            <h2 class="entry__date">
-              <span class="num">{{ formatLongDate(entry.date) }}</span>
-              <span class="entry__weekday">{{ formatWeekday(entry.date) }}</span>
-            </h2>
-            <div class="entry__meta">
-              <p
-                v-if="submittedTime(entry)"
-                class="entry__stamp"
-              >
-                <span>отправлен в</span>
-                <span class="num">{{ submittedTime(entry) }}</span>
-              </p>
-              <NuxtLink
-                :to="{ path: '/', query: { date: entry.date } }"
-                class="entry__open"
-              >
-                открыть на главной
-              </NuxtLink>
-            </div>
-          </header>
-
-          <p
-            v-if="entry.dayType === DayType.OFF"
-            class="entry__off"
-          >
-            не работал
-          </p>
-
-          <ul
-            v-else
-            class="entry__items"
-          >
-            <li
-              v-for="item in entry.items"
-              :key="item.id"
-              class="entry__item"
-              :style="{ '--line': lineColorVar(item.chainId ?? String(item.id)) }"
-            >
-              <span
-                class="entry__mark"
-                :class="markModifier(item.status)"
-                aria-hidden="true"
-              />
-              <span class="entry__text">{{ item.text }}</span>
-              <span class="entry__status">{{ STATUS_LABEL[item.status] }}</span>
-            </li>
-          </ul>
-        </article>
-      </li>
-    </ol>
+      :weeks="weeks"
+    />
   </div>
 </template>
 
@@ -143,6 +257,14 @@ onMounted(async () => {
 }
 
 .history__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--s-3) var(--s-5);
+}
+
+.history__heading {
   display: flex;
   flex-direction: column;
   gap: var(--s-1);
@@ -160,6 +282,24 @@ onMounted(async () => {
   max-width: 62ch;
 }
 
+.history__nav {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1) var(--s-3);
+}
+
+.history__step {
+  width: var(--ctrl-h-sm);
+  padding: 0;
+}
+
+.history__period {
+  margin-left: var(--s-2);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
 .history__skeleton {
   display: flex;
   flex-direction: column;
@@ -167,7 +307,7 @@ onMounted(async () => {
 }
 
 .history__skeleton-card {
-  height: 8rem;
+  height: 12rem;
   background: linear-gradient(100deg, var(--surface-sunken) 30%, var(--surface) 50%, var(--surface-sunken) 70%);
   background-size: 300% 100%;
   border-radius: var(--r-panel);
@@ -184,134 +324,28 @@ onMounted(async () => {
   }
 }
 
-.history__empty {
+.history__state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-3);
   padding: var(--s-5);
+}
+
+.history__state-text {
   color: var(--ink-2);
-}
-
-.history__list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-3);
-}
-
-.entry {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-3);
-  padding: var(--s-4) var(--s-5);
-}
-
-.entry__head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--s-3);
-}
-
-.entry__date {
-  display: flex;
-  align-items: baseline;
-  gap: var(--s-2);
-  font-size: 1.0625rem;
-  font-weight: 600;
-  color: var(--ink);
-}
-
-.entry__weekday {
-  font-size: 0.75rem;
-  font-weight: 400;
-  color: var(--ink-3);
-}
-
-.entry__meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: var(--s-1) var(--s-4);
-}
-
-.entry__stamp {
-  display: flex;
-  gap: var(--s-1);
-  font-size: 0.8125rem;
-  color: var(--ink-3);
-}
-
-.entry__open {
-  font-size: 0.8125rem;
-  color: var(--accent-text);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-.entry__off {
-  color: var(--ink-3);
-}
-
-.entry__items {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-2);
-}
-
-.entry__item {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: var(--s-3);
-}
-
-.entry__mark {
-  flex: none;
-  width: 13px;
-  height: 13px;
-  background: var(--surface);
-  border: 3px solid var(--line);
-  border-radius: 50%;
-}
-
-.entry__mark--delayed {
-  border-color: var(--alert);
-  box-shadow: inset 0 0 0 2px var(--surface), inset 0 0 0 6px var(--alert);
-}
-
-.entry__mark--terminus {
-  width: 5px;
-  height: 18px;
-  border: 0;
-  border-radius: var(--r-pill);
-  background: var(--line);
-}
-
-.entry__mark--cut {
-  border: 0;
-  background: var(--line);
-  opacity: 0.5;
-}
-
-.entry__text {
-  color: var(--ink);
-  max-width: 66ch;
-}
-
-.entry__status {
-  font-size: 0.75rem;
-  color: var(--ink-3);
+  max-width: 62ch;
 }
 
 @media (max-width: 48rem) {
-  .entry {
-    padding: var(--s-4);
+  .history__title {
+    font-size: 1.5rem;
   }
+}
 
-  .entry__item {
-    grid-template-columns: auto 1fr;
-  }
-
-  .entry__status {
-    grid-column: 2;
+@media (prefers-reduced-motion: reduce) {
+  .history__skeleton-card {
+    animation: none;
   }
 }
 </style>
