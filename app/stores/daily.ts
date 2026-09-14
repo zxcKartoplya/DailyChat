@@ -1,12 +1,10 @@
 import { useDailyApi } from '~/composables/api/useDailyApi'
 import { useOffReasonsStore } from '~/stores/offReasons'
 import { useUndoStore } from '~/stores/undo'
-import type { DailyDay, DailyEntry, DayWrite, DraftItem, OffReason, OpenChain } from '~/types/daily'
+import type { DailyDay, DailyEntry, DayWrite, DraftItem, OffPayload, OffReason, OpenChain } from '~/types/daily'
 import { DayType, EntryStatus, ItemStatus, OFF_REASON_NOTE_MAX } from '~/types/daily'
 import { todayIso } from '~/utils/date'
 import { plural } from '~/utils/plural'
-
-type OffPayload = Pick<DayWrite, 'offReason' | 'offReasonNote'>
 
 type ChainDraft = {
   marked: boolean
@@ -94,16 +92,22 @@ export const useDailyStore = defineStore('daily', () => {
     return [...fromChains, ...fromNew]
   })
 
-  const offPayload = computed<OffPayload>(() => {
-    if (!isDayOff.value || !offReason.value) return { offReason: null, offReasonNote: null }
+  const toOffPayload = (reason: OffReason | null, rawNote = ''): OffPayload => {
+    if (!reason) return { offReason: null, offReasonNote: null }
 
-    const note = offReasonNote.value.trim()
-    const requiresNote = offReasons.find(offReason.value)?.requiresNote ?? note.length > 0
+    const note = rawNote.trim()
+    const requiresNote = offReasons.find(reason)?.requiresNote ?? note.length > 0
 
-    if (!requiresNote) return { offReason: offReason.value, offReasonNote: null }
+    if (!requiresNote) return { offReason: reason, offReasonNote: null }
     if (!note || note.length > OFF_REASON_NOTE_MAX) return { offReason: null, offReasonNote: null }
 
-    return { offReason: offReason.value, offReasonNote: note }
+    return { offReason: reason, offReasonNote: note }
+  }
+
+  const offPayload = computed<OffPayload>(() => {
+    return isDayOff.value
+      ? toOffPayload(offReason.value, offReasonNote.value)
+      : toOffPayload(null)
   })
 
   const dayWrite = (): DayWrite => ({
@@ -412,7 +416,7 @@ export const useDailyStore = defineStore('daily', () => {
     scheduleSave()
   }
 
-  const markDaysOff = async (dates: string[]) => {
+  const markDaysOff = async (dates: string[], reason: OffReason | null) => {
     if (!day.value) return
 
     const seq = loadSeq
@@ -420,7 +424,7 @@ export const useDailyStore = defineStore('daily', () => {
     saving.value = true
 
     try {
-      await api.markDaysOff(dates)
+      await api.markDaysOff(dates, toOffPayload(reason))
 
       if (isCurrent(seq) && day.value) {
         day.value = {

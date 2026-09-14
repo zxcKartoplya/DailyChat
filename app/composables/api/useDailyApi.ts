@@ -1,6 +1,6 @@
 import { useApi } from '~/composables/api/useApi'
 import type { Schemas } from '~/types/schemas'
-import type { DailyDay, DailyEntry, DayWrite, OffReasonOption } from '~/types/daily'
+import type { DailyDay, DailyEntry, DayWrite, OffPayload, OffReasonOption } from '~/types/daily'
 import { mapDay, mapEntry, mapOffReasonOption } from '~/utils/api/mappers/daily'
 
 const dayPath = (date: string, suffix = '') => `/api/employee/daily/${date}${suffix}`
@@ -33,8 +33,13 @@ export const useDailyApi = () => {
     return mapEntry(await usePost<Schemas['DailyEntry']>(dayPath(date, '/submit')))
   }
 
-  const markDaysOff = async (dates: string[]): Promise<DailyEntry[]> => {
-    const payload: Schemas['BulkDayTypeWrite'] = { dates, day_type: 'off' }
+  const markDaysOff = async (dates: string[], off: OffPayload): Promise<DailyEntry[]> => {
+    const payload: Schemas['BulkDayTypeWrite'] = {
+      dates,
+      day_type: 'off',
+      off_reason: off.offReason,
+      off_reason_note: off.offReasonNote
+    }
     const entries = await usePut<Schemas['DailyEntry'][]>('/api/employee/daily-bulk', payload)
 
     return entries.map(mapEntry)

@@ -186,7 +186,7 @@ onMounted(() => {
         :days="store.missingDays"
         :busy="store.saving"
         @fill="goTo($event)"
-        @mark-off="store.markDaysOff($event)"
+        @mark-off="store.markDaysOff"
       />
 
       <header class="daily__head">

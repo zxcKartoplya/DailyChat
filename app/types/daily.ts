@@ -54,6 +54,8 @@ export type DayWrite = {
   items: DraftItem[]
 }
 
+export type OffPayload = Pick<DayWrite, 'offReason' | 'offReasonNote'>
+
 export type OpenChain = {
   chainId: string
   title: string

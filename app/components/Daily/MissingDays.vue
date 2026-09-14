@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import type { OffReason } from '~/types/daily'
 import { formatDateList } from '~/utils/date'
 
 type Props = {
@@ -10,7 +11,7 @@ const { days, busy = false } = defineProps<Props>()
 
 const emits = defineEmits<{
   fill: [date: string]
-  markOff: [dates: string[]]
+  markOff: [dates: string[], reason: OffReason | null]
 }>()
 
 const label = computed(() => formatDateList(days))
@@ -32,14 +33,18 @@ const firstDay = computed(() => days[0] ?? '')
       >
         заполнить
       </button>
-      <button
-        type="button"
-        class="btn btn--secondary btn--sm"
+      <DailyOffReasonMenu
         :disabled="busy"
-        @click="emits('markOff', days)"
+        @select="emits('markOff', days, $event)"
       >
-        отметить нерабочими
-      </button>
+        <button
+          type="button"
+          class="btn btn--secondary btn--sm"
+          :disabled="busy"
+        >
+          отметить нерабочими
+        </button>
+      </DailyOffReasonMenu>
     </div>
   </aside>
 </template>
