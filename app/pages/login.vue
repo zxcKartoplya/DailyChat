@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { useLoginStore } from '#imports'
+import { safeRedirect } from '~/utils/session'
 import { authSchema } from '~/utils/shemas/AuthSchema'
 
 const toast = useToast()
+const route = useRoute()
 const router = useRouter()
 const loginStore = useLoginStore()
 
@@ -37,7 +39,7 @@ const onSubmit = async () => {
   try {
     await loginStore.loginUser(parsed.data)
     toast.add({ title: 'Вход выполнен' })
-    router.push('/')
+    router.push(safeRedirect(route.query.redirect))
   } catch {
     failed.value = true
   } finally {
