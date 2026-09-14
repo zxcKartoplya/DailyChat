@@ -8,6 +8,7 @@ import type { DailyEntry } from '~/types/daily'
 import { daysBetween, formatDateRange, isIsoDate, shiftDays, todayIso } from '~/utils/date'
 import { ApiError } from '~/utils/errors/ApiError'
 import { buildHistoryWeeks } from '~/utils/historyTimeline'
+import { isSessionEnded } from '~/utils/session'
 
 definePageMeta({ layout: 'auth' })
 useHead({ title: 'История' })
@@ -84,7 +85,7 @@ const load = async () => {
     activity.value = result
     entries.value = list
   } catch (caught) {
-    if (current !== requestId) return
+    if (current !== requestId || isSessionEnded(caught)) return
 
     activity.value = null
     entries.value = []

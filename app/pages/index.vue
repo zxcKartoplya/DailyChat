@@ -4,6 +4,7 @@ import { useOffReasonsStore } from '~/stores/offReasons'
 import type { DraftItem } from '~/types/daily'
 import { formatLongDate, isIsoDate, lastDays, todayIso } from '~/utils/date'
 import { plural } from '~/utils/plural'
+import { isSessionEnded } from '~/utils/session'
 
 definePageMeta({ layout: 'auth' })
 
@@ -49,9 +50,14 @@ const goTo = (target: string) => {
 
 const openDay = async (target: string) => {
   const previous = store.date
-  const saved = await store.open(target)
 
-  if (saved) return
+  try {
+    if (await store.open(target)) return
+  } catch (caught) {
+    if (isSessionEnded(caught)) return
+
+    throw caught
+  }
 
   toast.add({
     title: 'Не сохранилось',
@@ -102,7 +108,9 @@ const onSubmit = async () => {
   try {
     await store.submit()
     toast.add({ title: 'Дейлик отправлен', description: submittedNote.value })
-  } catch {
+  } catch (caught) {
+    if (isSessionEnded(caught)) return
+
     toast.add({
       title: 'Не отправилось',
       description: 'Записи остались на экране. Попробуй ещё раз.',

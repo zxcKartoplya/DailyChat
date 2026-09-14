@@ -3,6 +3,7 @@ import { useOffReasonsStore } from '~/stores/offReasons'
 import type { DailyDay, DailyEntry, DayWrite, DraftItem, OffReason } from '~/types/daily'
 import { DayType, EntryStatus, ItemStatus, OFF_REASON_NOTE_MAX } from '~/types/daily'
 import { todayIso } from '~/utils/date'
+import { isSessionEnded } from '~/utils/session'
 
 type OffPayload = Pick<DayWrite, 'offReason' | 'offReasonNote'>
 
@@ -221,10 +222,10 @@ export const useDailyStore = defineStore('daily', () => {
       }
 
       return true
-    } catch {
+    } catch (caught) {
       if (isCurrent(seq)) {
         dirty = true
-        saveFailed.value = true
+        if (!isSessionEnded(caught)) saveFailed.value = true
       }
 
       return false
@@ -354,8 +355,8 @@ export const useDailyStore = defineStore('daily', () => {
           missingDays: day.value.missingDays.filter(date => !dates.includes(date))
         }
       }
-    } catch {
-      if (isCurrent(seq)) saveFailed.value = true
+    } catch (caught) {
+      if (isCurrent(seq) && !isSessionEnded(caught)) saveFailed.value = true
     } finally {
       if (isCurrent(seq)) saving.value = false
     }
@@ -382,12 +383,12 @@ export const useDailyStore = defineStore('daily', () => {
 
       applyEntry(entry)
       savedAt.value = submittedAt.value
-    } catch {
+    } catch (caught) {
       if (!isCurrent(seq)) return
 
       dirty = true
-      saveFailed.value = true
-      throw new Error('submit failed')
+      if (!isSessionEnded(caught)) saveFailed.value = true
+      throw caught
     } finally {
       if (isCurrent(seq)) saving.value = false
     }
