@@ -34,6 +34,12 @@ const showNote = computed(() => noteOpen.value || text.value.length > 0 || needs
 
 const hint = computed(() => STATUS_HINT[status.value])
 
+const cardLabel = computed(() => {
+  if (!marked) return `Линия «${chain.title}», без отметки`
+
+  return `Линия «${chain.title}», отмечена: ${STATUS_LABEL[status.value]}`
+})
+
 const openNote = async () => {
   noteOpen.value = true
   await nextTick()
@@ -49,9 +55,13 @@ watch(() => marked, (value) => {
 
 <template>
   <article
+    data-card
     class="line"
     :class="{ 'line--marked': marked }"
     :style="{ '--line': color }"
+    :tabindex="editable ? 0 : undefined"
+    :aria-label="cardLabel"
+    :aria-keyshortcuts="editable ? 'Space 1 2 3 4' : undefined"
   >
     <div class="line__band">
       <DailyDayGrid :days="days.length" />
@@ -156,6 +166,12 @@ watch(() => marked, (value) => {
 
 .line:last-child {
   border-bottom: 0;
+}
+
+.line:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  border-radius: var(--r-panel);
 }
 
 .line--marked {

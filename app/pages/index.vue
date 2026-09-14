@@ -2,6 +2,7 @@
 import { useDailyStore } from '~/stores/daily'
 import { useOffReasonsStore } from '~/stores/offReasons'
 import type { DraftItem } from '~/types/daily'
+import { STATUS_ORDER } from '~/types/daily'
 import { formatLongDate, isIsoDate, lastDays, todayIso } from '~/utils/date'
 import { plural } from '~/utils/plural'
 
@@ -115,6 +116,32 @@ const onSubmit = async () => {
   }
 }
 
+const chainAt = (index: number) => store.openChains[index] ?? null
+
+const keyboard = useCardKeyboard({
+  enabled: () => store.isEditable,
+  onToggle: (index) => {
+    const chain = chainAt(index)
+
+    if (!chain) return
+
+    store.toggleChainMark(chain.chainId)
+  },
+  onDigit: (index, position) => {
+    const chain = chainAt(index)
+    const status = STATUS_ORDER[position]
+
+    if (!chain || !status) return
+
+    store.setChainStatus(chain.chainId, status)
+  },
+  onSubmit: () => {
+    if (!store.canSubmit || store.saving) return
+
+    void onSubmit()
+  }
+})
+
 onMounted(() => {
   void syncDay()
   void offReasons.load()
@@ -222,11 +249,35 @@ onMounted(() => {
             {{ hint }}
           </p>
 
+          <p
+            v-if="store.isEditable"
+            class="daily__keys"
+          >
+            <span class="daily__key">
+              <kbd>↑</kbd><kbd>↓</kbd> линия
+            </span>
+            <span class="daily__key">
+              <kbd>Space</kbd> отметить
+            </span>
+            <span class="daily__key">
+              <kbd>1</kbd>—<kbd>4</kbd> состояние
+            </span>
+            <span class="daily__key">
+              <kbd>Esc</kbd> выйти из записи
+            </span>
+            <span class="daily__key">
+              <kbd>⌘</kbd>/<kbd>Ctrl</kbd>+<kbd>↵</kbd> отправить
+            </span>
+          </p>
+
           <div class="daily__axis">
             <DailyAxis :days="days" />
           </div>
 
-          <div class="daily__field panel">
+          <div
+            class="daily__field panel"
+            @keydown="keyboard.onKeydown"
+          >
             <DailyLineCard
               v-for="chain in store.openChains"
               :key="chain.chainId"
@@ -404,6 +455,40 @@ onMounted(() => {
   font-size: 0.8125rem;
   color: var(--ink-3);
   max-width: 64ch;
+}
+
+.daily__keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2) var(--s-4);
+  font-size: 0.75rem;
+  color: var(--ink-3);
+}
+
+.daily__key {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+}
+
+.daily__keys kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.375rem;
+  height: 1.375rem;
+  padding: 0 var(--s-2);
+  background: var(--surface-sunken);
+  border-radius: var(--r-pill);
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 0.75rem;
+}
+
+@media (max-width: 48rem), (pointer: coarse) {
+  .daily__keys {
+    display: none;
+  }
 }
 
 .daily__section-title {
