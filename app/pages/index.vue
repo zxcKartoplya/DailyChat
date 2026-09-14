@@ -3,7 +3,7 @@ import { useDailyStore } from '~/stores/daily'
 import { useOffReasonsStore } from '~/stores/offReasons'
 import { UNDO_TTL, useUndoStore } from '~/stores/undo'
 import type { DraftItem } from '~/types/daily'
-import { STATUS_ORDER } from '~/types/daily'
+import { ItemStatus, STATUS_LABEL, STATUS_ORDER } from '~/types/daily'
 import { formatLongDate, isIsoDate, lastDays, todayIso } from '~/utils/date'
 import { plural } from '~/utils/plural'
 
@@ -27,6 +27,12 @@ const hint = computed(() => {
 
   return `Отметь линии, где работа шла: станцией за ${formatLongDate(store.date)} или кнопкой «без изменений» — запись не обязательна. Где не было — пропусти.`
 })
+
+const swipeHint = [
+  `Смахни линию влево — ${STATUS_LABEL[ItemStatus.DONE]}`,
+  `вправо — ${STATUS_LABEL[ItemStatus.IN_PROGRESS]}`,
+  `дальше вправо — ${STATUS_LABEL[ItemStatus.BLOCKED]}, и напиши, что мешает.`
+].join(', ')
 
 const markAllLabel = computed(() => {
   return store.hasMarkedChains ? 'остальные без изменений' : 'ничего не изменилось'
@@ -268,6 +274,13 @@ onMounted(() => {
 
           <p
             v-if="store.isEditable"
+            class="daily__swipe"
+          >
+            {{ swipeHint }}
+          </p>
+
+          <p
+            v-if="store.isEditable"
             class="daily__keys"
           >
             <span class="daily__key">
@@ -475,6 +488,19 @@ onMounted(() => {
   font-size: 0.8125rem;
   color: var(--ink-3);
   max-width: 64ch;
+}
+
+.daily__swipe {
+  display: none;
+  font-size: 0.8125rem;
+  color: var(--ink-3);
+  max-width: 64ch;
+}
+
+@media (any-pointer: coarse) {
+  .daily__swipe {
+    display: block;
+  }
 }
 
 .daily__keys {
